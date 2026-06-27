@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B1B2F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Mindora — mood check-ins, trends, movement and mindfulness tracking, and a supportive chat companion.">
+<title>Mindora — a quiet place to check in</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25' r='75%25'%3E%3Cstop offset='0%25' stop-color='%23E8896B'/%3E%3Cstop offset='100%25' stop-color='%236B6F9E'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ============ PROFILE GATE ============ -->
+  <div id="profileGate" class="profile-gate">
+    <div class="profile-card">
+      <div class="profile-brand">
+        <span class="brand-mark brand-mark-pulse" aria-hidden="true"></span>
+        <span class="brand-name">Mindora</span>
+      </div>
+      <p class="muted" id="profileTagline" data-i18n="profile_app_tagline">A quiet place to check in</p>
+
+      <label class="sr-only" for="profileLangSelect" data-i18n="field_language">Language</label>
+      <select id="profileLangSelect" class="select-input lang-select"></select>
+
+      <div id="profileError" class="profile-error hidden" role="alert" aria-live="polite"></div>
+
+      <form id="profileForm" novalidate>
+        <label class="field-label" for="profileNameInput" data-i18n="profile_name_label">Name</label>
+        <input type="text" id="profileNameInput" autocomplete="name">
+
+        <label class="field-label" for="profilePinInput" data-i18n="profile_pin_label">PIN (4+ digits)</label>
+        <input type="password" id="profilePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">
+
+        <button type="submit" id="profileSubmitBtn" class="btn-primary" style="margin-top:16px;" data-i18n="profile_create_btn">Create profile</button>
+      </form>
+      <button id="profileToggleBtn" class="link-btn" style="margin-top:12px; width:100%; text-align:center;" data-i18n="profile_toggle_to_login">Already have a profile? Log in</button>
+      <p class="version-footer">Mindora v1.0</p>
+    </div>
+  </div>
+
+  <!-- ============ APP SHELL ============ -->
+  <div id="appShell" class="app-shell hidden">
+
+    <!-- Crisis banner: lives outside scroll content so it can never be missed -->
+    <div id="crisisBanner" class="crisis-banner hidden" role="alert">
+      <div class="crisis-inner">
+        <div class="crisis-text">
+          <strong data-i18n="crisis_heading">If things feel unsafe right now, you don't have to handle it alone.</strong>
+          <span data-i18n="crisis_subtext">Some support lines you can call right now, day or night.</span>
+        </div>
+        <div class="crisis-actions">
+          <a href="tel:131114" class="crisis-btn"><span data-i18n="helpline_lifeline">Lifeline</span> · 13 11 14</a>
+          <a href="tel:1300224636" class="crisis-btn"><span data-i18n="helpline_beyondblue">Beyond Blue</span> · 1300 22 4636</a>
+          <a href="tel:1300659467" class="crisis-btn"><span data-i18n="helpline_suicidecallback">Suicide Call Back</span> · 1300 659 467</a>
+          <a href="tel:000" class="crisis-btn crisis-btn-urgent"><span data-i18n="helpline_emergency">Emergency</span> · 000</a>
+        </div>
+        <button id="crisisCollapse" class="crisis-collapse" data-i18n="crisis_minimise">Minimise</button>
+      </div>
+    </div>
+    <button id="crisisReopen" class="crisis-reopen hidden" data-i18n="crisis_reopen">Support lines</button>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" id="moodOrbMini" aria-hidden="true"></span>
+        <span class="brand-name">Mindora</span>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="icon-btn" data-i18n-aria-label="toggle_theme" aria-label="Toggle theme">
+          <svg class="icon-sun-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button id="settingsBtn" class="icon-btn" data-i18n-aria-label="nav_settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="14" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="screens">
+
+      <!-- TODAY -->
+      <section id="screen-today" class="screen active" aria-labelledby="greeting">
+        <div class="today-hero">
+          <div class="mood-orb-wrap">
+            <div id="moodOrb" class="mood-orb" aria-hidden="true"></div>
+          </div>
+          <h1 id="greeting" data-i18n="greeting_default">How are you, really?</h1>
+          <p id="todaySubline" class="muted" data-i18n="subline_none">You haven't checked in yet today.</p>
+        </div>
+
+        <div id="checkinPromptCard" class="card cta-card">
+          <p data-i18n="cta_line">One honest minute is enough.</p>
+          <button id="startCheckinBtn" class="btn-primary" data-i18n="btn_checkin">Check in for today</button>
+        </div>
+
+        <div id="todaySummaryCard" class="card hidden">
+          <div class="card-head">
+            <h3 data-i18n="checkin_title">Today's check-in</h3>
+            <button id="editCheckinBtn" class="link-btn" data-i18n="btn_edit">Edit</button>
+          </div>
+          <div id="todaySummaryBody"></div>
+        </div>
+
+        <div id="recommendCard" class="card hidden" aria-live="polite">
+          <h3 data-i18n="recommend_title">Worth trying right now</h3>
+          <ul id="recommendList" class="recommend-list"></ul>
+          <div id="escalationActions" class="crisis-actions hidden" style="margin-top:12px;">
+            <a href="tel:131114" class="crisis-btn-static"><span data-i18n="helpline_lifeline">Lifeline</span> · 13 11 14</a>
+            <a href="tel:1300224636" class="crisis-btn-static"><span data-i18n="helpline_beyondblue">Beyond Blue</span> · 1300 22 4636</a>
+            <a href="tel:000" class="crisis-btn-static"><span data-i18n="helpline_emergency">Emergency</span> · 000</a>
+          </div>
+        </div>
+
+        <div class="streak-row" id="streakRow"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="log_something_title">Log something</h3>
+          </div>
+          <div class="quick-actions">
+            <button class="quick-btn" data-quick="physical" data-i18n="quick_movement">+ Movement</button>
+            <button class="quick-btn" data-quick="mind" data-i18n="quick_mind">+ Mind exercise</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHECK-IN -->
+      <section id="screen-checkin" class="screen">
+        <h2 data-i18n="checkin_title">Today's check-in</h2>
+        <p class="muted" data-i18n="checkin_privacy">This stays on this device, and it's just for you.</p>
+
+        <div class="card">
+          <label class="field-label" for="moodSlider" data-i18n="field_mood">Mood right now</label>
+          <input type="range" id="moodSlider" min="1" max="10" value="5" class="mood-slider">
+          <div class="mood-slider-labels"><span data-i18n="mood_low">Heavy</span><span id="moodValueLabel" aria-hidden="true">5</span><span data-i18n="mood_high">Light</span></div>
+
+          <p class="field-label" id="tagsLabel" data-i18n="field_tags">What's present today? (pick any)</p>
+          <div id="tagChips" class="chip-row" role="group" aria-labelledby="tagsLabel"></div>
+
+          <label class="field-label" for="sleepInput" data-i18n="field_sleep">Sleep last night (hours)</label>
+          <input type="number" id="sleepInput" min="0" max="14" step="0.5" data-i18n-placeholder="sleep_placeholder">
+
+          <label class="field-label" for="stressSlider" data-i18n="field_stress">Stress level</label>
+          <input type="range" id="stressSlider" min="1" max="10" value="5" class="mood-slider">
+          <div class="mood-slider-labels"><span data-i18n="stress_low">Calm</span><span id="stressValueLabel" aria-hidden="true">5</span><span data-i18n="stress_high">Stretched thin</span></div>
+
+          <label class="field-label" for="journalInput" data-i18n="field_journal">Anything you want to put into words? (optional)</label>
+          <textarea id="journalInput" rows="4" data-i18n-placeholder="journal_placeholder"></textarea>
+
+          <button type="button" id="moreQuestionsToggle" class="link-btn" aria-expanded="false" data-i18n="more_questions_toggle" style="margin-top:18px; display:block;">+ A few more questions (optional)</button>
+          <div id="moreQuestionsPanel" class="hidden" style="margin-top:6px;">
+            <p class="muted-inline" data-i18n="more_questions_intro" style="display:block; margin-bottom:6px;">These are optional — skip anything that doesn't fit.</p>
+
+            <label class="field-label" for="energySlider" data-i18n="field_energy">Energy level</label>
+            <input type="range" id="energySlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="energy_low">Low</span><span id="energyValueLabel" aria-hidden="true">5</span><span data-i18n="energy_high">Energised</span></div>
+
+            <label class="field-label" for="enjoymentSlider" data-i18n="field_enjoyment">Enjoying things?</label>
+            <input type="range" id="enjoymentSlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="enjoyment_low">Flat</span><span id="enjoymentValueLabel" aria-hidden="true">5</span><span data-i18n="enjoyment_high">Engaged</span></div>
+
+            <label class="field-label" for="connectionSlider" data-i18n="field_connection">Feeling connected</label>
+            <input type="range" id="connectionSlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="connection_low">Isolated</span><span id="connectionValueLabel" aria-hidden="true">5</span><span data-i18n="connection_high">Connected</span></div>
+
+            <label class="field-label" for="focusSlider" data-i18n="field_focus">Focus today</label>
+            <input type="range" id="focusSlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="focus_low">Scattered</span><span id="focusValueLabel" aria-hidden="true">5</span><span data-i18n="focus_high">Clear</span></div>
+
+            <p class="field-label" id="appetiteLabel" data-i18n="field_appetite">Appetite</p>
+            <div id="appetiteChips" class="chip-row" role="group" aria-labelledby="appetiteLabel"></div>
+          </div>
+
+          <div class="form-actions">
+            <button id="cancelCheckinBtn" class="btn-ghost" data-i18n="btn_cancel">Cancel</button>
+            <button id="saveCheckinBtn" class="btn-primary" data-i18n="btn_save_checkin">Save check-in</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRENDS -->
+      <section id="screen-trends" class="screen">
+        <h2 data-i18n="trends_title">Trends</h2>
+
+        <div class="range-tabs" id="rangeTabs" role="group" aria-label="Date range">
+          <button class="range-tab active" data-range="7" data-i18n="range_7" aria-pressed="true">7d</button>
+          <button class="range-tab" data-range="30" data-i18n="range_30" aria-pressed="false">30d</button>
+          <button class="range-tab" data-range="90" data-i18n="range_90" aria-pressed="false">90d</button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="mood_over_time">Mood over time</h3>
+          <canvas id="moodLineChart" height="180" role="img" aria-label="Mood line chart"></canvas>
+          <p id="noMoodDataMsg" class="muted hidden" data-i18n="no_mood_data">Check in for a few days to see a trend line here.</p>
+        </div>
+
+        <div class="card">
+          <h3 id="heatmapHeading" data-i18n="this_month">This month</h3>
+          <div id="heatmapGrid" class="heatmap-grid" role="img" aria-labelledby="heatmapHeading"></div>
+          <div class="heatmap-legend">
+            <span class="muted-inline" data-i18n="heatmap_lighter">Lighter</span>
+            <span class="heatmap-legend-bar" aria-hidden="true"></span>
+            <span class="muted-inline" data-i18n="heatmap_brighter">Brighter</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="snapshot">Snapshot</h3>
+          <div id="statsGrid" class="stats-grid"></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="tags_shown">What's been showing up</h3>
+          <div id="tagFreq" class="tagfreq-list"></div>
+        </div>
+      </section>
+
+      <!-- TRACKER -->
+      <section id="screen-tracker" class="screen">
+        <h2 data-i18n="move_mind_title">Move &amp; Mind</h2>
+        <p class="muted" data-i18n="move_mind_sub">Track your body and your headspace, side by side.</p>
+
+        <div class="tracker-cols">
+          <div class="card tracker-col">
+            <h3 data-i18n="movement">Movement</h3>
+            <div class="stat-pair">
+              <div><span id="moveStreakNum" class="stat-num">0</span><span class="stat-cap" data-i18n="day_streak">day streak</span></div>
+              <div><span id="moveWeekNum" class="stat-num">0</span><span class="stat-cap" data-i18n="this_week">this week</span></div>
+            </div>
+            <button class="btn-secondary full" data-quick="physical" data-i18n="log_movement_btn">Log movement</button>
+          </div>
+          <div class="card tracker-col">
+            <h3 data-i18n="mind">Mind</h3>
+            <div class="stat-pair">
+              <div><span id="mindStreakNum" class="stat-num">0</span><span class="stat-cap" data-i18n="day_streak">day streak</span></div>
+              <div><span id="mindWeekNum" class="stat-num">0</span><span class="stat-cap" data-i18n="this_week">this week</span></div>
+            </div>
+            <button class="btn-secondary full" data-quick="mind" data-i18n="log_mind_btn">Log mind exercise</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="recent_activity">Recent activity</h3>
+          <div id="activityLog" class="activity-log"></div>
+        </div>
+      </section>
+
+      <!-- LOG SCREEN -->
+      <section id="screen-log" class="screen">
+        <h2 id="logScreenTitle" data-i18n="log_title_movement">Log movement</h2>
+        <div class="card">
+          <label class="field-label" for="logType" data-i18n="field_type">Type</label>
+          <select id="logType" class="select-input"></select>
+
+          <label class="field-label" for="logDuration" data-i18n="field_duration">Duration (minutes)</label>
+          <input type="number" id="logDuration" min="1" max="300" value="20">
+
+          <div id="intensityWrap">
+            <label class="field-label" for="logIntensity" data-i18n="field_intensity">Intensity</label>
+            <input type="range" id="logIntensity" min="1" max="5" value="3" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="intensity_easy">Easy</span><span id="intensityValueLabel" aria-hidden="true">3</span><span data-i18n="intensity_allout">All-out</span></div>
+          </div>
+
+          <label class="field-label" for="logNotes" data-i18n="field_notes">Notes (optional)</label>
+          <textarea id="logNotes" rows="2"></textarea>
+
+          <div class="form-actions">
+            <button id="cancelLogBtn" class="btn-ghost" data-i18n="btn_cancel">Cancel</button>
+            <button id="saveLogBtn" class="btn-primary" data-i18n="btn_save">Save</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- LEARN -->
+      <section id="screen-learn" class="screen">
+        <h2 data-i18n="learn_title">Learn</h2>
+
+        <div class="range-tabs" id="learnTabs" role="group" aria-label="Learn section">
+          <button class="range-tab active" data-learntab="understand" data-i18n="tab_understand" aria-pressed="true">Understand</button>
+          <button class="range-tab" data-learntab="wellbeing" data-i18n="tab_wellbeing" aria-pressed="false">Well-being</button>
+        </div>
+
+        <p class="muted" id="learnSubtitleText" data-i18n="learn_subtitle">A few things worth knowing about mood, stress, and what actually helps.</p>
+        <p class="muted-inline" data-i18n="learn_disclaimer" style="display:block; margin-bottom:14px;">General information, not a diagnosis or treatment plan — see Settings for when and how to get real support.</p>
+
+        <div id="learnTopics" class="learn-topics"></div>
+      </section>
+
+      <!-- CHAT -->
+      <section id="screen-chat" class="screen">
+        <h2 data-i18n="chat_title">Chat</h2>
+        <p class="muted" data-i18n="chat_disclaimer">Not a therapist or crisis service — just a supportive presence. See Settings for real helplines.</p>
+
+        <div id="chatApiKeyPrompt" class="card hidden">
+          <h3 data-i18n="chat_api_key_missing_title">Add an API key to chat</h3>
+          <p class="muted" data-i18n="chat_api_key_missing_body">Mindora's chat uses the Anthropic API directly from your browser. Add your own API key in Settings to turn it on — nothing is sent anywhere except directly to Anthropic.</p>
+          <button id="chatGoToSettingsBtn" class="btn-secondary" data-i18n="chat_go_to_settings">Go to Settings</button>
+        </div>
+
+        <div id="chatPanel">
+          <label class="chip" style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <input type="checkbox" id="chatContextToggle" style="width:auto;">
+            <span data-i18n="chat_context_toggle">Include today's check-in as context</span>
+          </label>
+
+          <div id="chatMessages" class="chat-messages" role="log" aria-live="polite"></div>
+
+          <div class="chat-input-row">
+            <label class="sr-only" for="chatInput" data-i18n="chat_input_placeholder">Type how you're feeling…</label>
+            <textarea id="chatInput" rows="1" data-i18n-placeholder="chat_input_placeholder"></textarea>
+            <button id="chatSendBtn" class="btn-primary chat-send-btn" data-i18n-aria-label="chat_send" aria-label="Send">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M3 11l18-7-7 18-2.5-7L3 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <button id="chatClearBtn" class="link-btn" style="margin-top:10px;" data-i18n="chat_clear">Clear chat</button>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="screen-settings" class="screen">
+        <h2 data-i18n="settings_title">Settings</h2>
+
+        <div class="card">
+          <label class="field-label" for="nameInput" data-i18n="field_name">Your name (optional, just for the greeting)</label>
+          <input type="text" id="nameInput">
+          <div class="form-actions"><button id="saveNameBtn" class="btn-secondary" data-i18n="btn_save_name">Save</button></div>
+        </div>
+
+        <div class="card">
+          <label class="field-label" for="settingsLangSelect" data-i18n="field_language">Language</label>
+          <select id="settingsLangSelect" class="select-input"></select>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="field_api_key">Anthropic API key</h3>
+          <p class="muted" data-i18n="api_key_helper">Stored only in this browser, never synced to your profile or anywhere else. Get one at console.anthropic.com.</p>
+          <label class="sr-only" for="apiKeyInput" data-i18n="field_api_key">Anthropic API key</label>
+          <input type="password" id="apiKeyInput" autocomplete="off" placeholder="sk-ant-...">
+          <div class="form-actions"><button id="saveApiKeyBtn" class="btn-secondary" data-i18n="btn_save_api_key">Save key</button></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="your_data">Your data</h3>
+          <p class="muted" data-i18n="your_data_note">Stored under your profile. Export anytime for a personal backup.</p>
+          <div class="form-actions">
+            <button id="exportJsonBtn" class="btn-secondary" data-i18n="export_json">Export as JSON</button>
+            <button id="exportCsvBtn" class="btn-secondary" data-i18n="export_csv">Export as CSV</button>
+          </div>
+          <div class="form-actions">
+            <button id="clearDataBtn" class="btn-danger" data-i18n="clear_data">Clear all data</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="switch_profile">Switch profile</h3>
+          <div class="form-actions">
+            <button id="switchProfileBtn" class="btn-secondary full" data-i18n="switch_profile">Switch profile</button>
+          </div>
+          <div class="form-actions">
+            <button id="logoutBtn" class="btn-ghost full" data-i18n="logout">Log out</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="admin_title">Manage profiles</h3>
+          <p class="muted-inline" data-i18n="admin_note" style="display:block; margin-bottom:10px;">Names only — PINs are never shown here.</p>
+          <div id="adminProfileList" class="activity-log"></div>
+
+          <div class="admin-add-block">
+            <p class="field-label" data-i18n="admin_add_title" style="margin-top:16px;">Add a profile</p>
+            <input type="text" id="adminNewName" data-i18n-placeholder="profile_name_label" placeholder="Name">
+            <input type="password" id="adminNewPin" inputmode="numeric" pattern="[0-9]*" maxlength="8" data-i18n-placeholder="profile_pin_label" placeholder="PIN" style="margin-top:8px;">
+            <div id="adminAddError" class="profile-error hidden" role="alert" aria-live="polite" style="margin-top:8px;"></div>
+            <div class="form-actions">
+              <button id="adminAddBtn" class="btn-secondary full" data-i18n="admin_add_btn">Add profile</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card disclaimer-card">
+          <h3 data-i18n="about_title">About Mindora</h3>
+          <p class="muted" id="aboutBody" data-i18n="about_body">Mindora helps you notice patterns in your mood and habits over time. It is not a diagnostic tool, it doesn't replace professional care, and any suggestions it makes are based on simple rules you can see — not a clinical assessment. If you're worried about your mental health, a GP, psychologist, or one of the support lines below is the right next step.</p>
+          <div class="crisis-actions">
+            <a href="tel:131114" class="crisis-btn-static"><span data-i18n="helpline_lifeline">Lifeline</span> · 13 11 14</a>
+            <a href="tel:1300224636" class="crisis-btn-static"><span data-i18n="helpline_beyondblue">Beyond Blue</span> · 1300 22 4636</a>
+            <a href="tel:1800551800" class="crisis-btn-static"><span data-i18n="helpline_kidshelpline">Kids Helpline</span> · 1800 55 1800</a>
+          </div>
+        </div>
+
+        <div class="card disclaimer-card">
+          <h3 data-i18n="disclaimer_title">Disclaimer</h3>
+          <p class="muted" data-i18n="disclaimer_body">The information in Learn and Well-being is general and educational only, put together from publicly available knowledge. It isn't personalised advice and hasn't been reviewed by a clinician for your specific situation. Please don't treat anything in this app as a replacement for professional judgement — read it critically, and check anything important with a qualified GP, psychologist, or other professional rather than relying on it alone.</p>
+          <p class="version-footer">Mindora v1.0</p>
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="bottombar" id="bottomNav" aria-label="Main">
+      <button class="nav-btn active" data-screen="today" aria-current="page">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span data-i18n="nav_today">Today</span>
+      </button>
+      <button class="nav-btn" data-screen="trends">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 17l5-5 4 4 7-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span data-i18n="nav_trends">Trends</span>
+      </button>
+      <button class="nav-btn" data-screen="tracker">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 12h4l2-5 4 10 2-5h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span data-i18n="nav_tracker">Move</span>
+      </button>
+      <button class="nav-btn" data-screen="learn">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="16" x2="13" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span data-i18n="nav_learn">Learn</span>
+      </button>
+      <button class="nav-btn" data-screen="chat">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 4h16v10H9l-4 4v-4H4V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span data-i18n="nav_chat">Chat</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/profiles.js"></script>
+  <script src="js/recommend.js"></script>
+  <script src="js/mood.js"></script>
+  <script src="js/tracker.js"></script>
+  <script src="js/trends.js"></script>
+  <script src="js/learn.js"></script>
+  <script src="js/wellbeing.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
