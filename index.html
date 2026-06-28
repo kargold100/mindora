@@ -114,6 +114,8 @@
           </div>
         </div>
 
+        <div class="progress-row" id="todayProgressRow"></div>
+
         <div class="streak-row" id="streakRow"></div>
 
         <div class="card">
@@ -335,6 +337,7 @@
       <section id="screen-settings" class="screen">
         <h2 data-i18n="settings_title">Settings</h2>
 
+        <p class="settings-section-label" data-i18n="settings_section_account">Account</p>
         <div class="card">
           <label class="field-label" for="nameInput" data-i18n="field_name">Your name (optional, just for the greeting)</label>
           <input type="text" id="nameInput">
@@ -346,6 +349,7 @@
           <select id="settingsLangSelect" class="select-input"></select>
         </div>
 
+        <p class="settings-section-label" data-i18n="settings_section_data">Privacy &amp; Data</p>
         <div class="card">
           <h3 data-i18n="field_api_key">Anthropic API key</h3>
           <p class="muted" data-i18n="api_key_helper">Stored only in this browser, never synced to your profile or anywhere else. Get one at console.anthropic.com.</p>
@@ -366,6 +370,7 @@
           </div>
         </div>
 
+        <p class="settings-section-label" data-i18n="settings_section_about">About</p>
         <div class="card">
           <h3 data-i18n="switch_profile">Switch profile</h3>
           <div class="form-actions">
@@ -420,6 +425,7 @@
   </div>
 
   <script src="js/i18n.js"></script>
+  <script src="js/modal.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/storage.js"></script>

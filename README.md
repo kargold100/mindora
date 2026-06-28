@@ -31,6 +31,51 @@ one device. To get profiles that follow you across browsers/devices, deploy
 the Apps Script backend below — it's the same Google Apps Script + Sheets
 pattern used in your other tools (SmartSaver, the expense tracker, PCFB).
 
+## Disclaimer (expanded)
+
+The Settings → Disclaimer card now covers more than the Learn/Well-being
+content: it explicitly names the **Chat companion as AI-generated** (can be
+wrong, incomplete, or miss context, and no human reviews its replies),
+states plainly **where check-in and journal data lives** (this device, or
+your own private Google Sheet in remote mode — never sent anywhere else by
+Mindora), and reiterates the crisis-line reminder. It's the same text
+whether you're in local or remote mode; only the data-location sentence
+is something to mentally adjust if you're not sure which mode you're in
+(Settings doesn't currently display that explicitly — ask if you'd like a
+small "synced" / "local only" indicator added).
+
+There's also now a **one-time acknowledgment** on first launch (before the
+profile screen, once per browser — not shown again, and not tied to any
+particular profile): a short summary of what Mindora is and isn't, a
+checkbox that must be ticked to continue, and a pointer to the full
+Disclaimer in Settings. It's stored as a single flag in `localStorage`
+(`mindora_disclaimer_ack`); clearing site data will bring it back.
+
+## Custom confirm dialogs
+
+Destructive actions (clearing all data, removing a profile in admin.html)
+now use an in-app modal (`js/modal.js`) instead of the browser's native
+`confirm()` popup — same visual language as the rest of the app, clearer
+button labels (e.g. "Clear all data" / "Cancel" instead of generic
+"OK" / "Cancel"), and it's reusable for anything else that needs a
+confirm-or-cancel step later.
+
+## Today screen additions
+
+- **Today's progress**: three small pills (Check-in / Movement / Mind)
+  that fill in as you complete each one — a quick "what's left today" at a
+  glance, sitting above the longer-term streaks
+- **Mood descriptor**: the subline under the orb now reads something like
+  "A steady day" instead of the generic "Checked in for today," derived
+  from today's mood value in five bands. Small thing, but it makes the orb
+  feel like it's actually saying something rather than just changing colour
+
+## Settings reorganised
+
+Three section labels (**Account**, **Privacy & Data**, **About**) now
+group the existing cards instead of presenting one long undifferentiated
+stack — purely visual, no functional change, but noticeably easier to scan.
+
 ## Admin: a separate, gated page
 
 Profile management moved out of the main app entirely and into its own
@@ -289,6 +334,7 @@ mindora/
     ├── config.js          APPS_SCRIPT_URL (empty = local-only mode)
     ├── api.js             JSONP client for the backend
     ├── profiles.js         self-register/login/resume/logout, local or remote
+    ├── modal.js              custom confirm dialogs + onboarding acknowledgment
     ├── admin.js             profile list/approve/add/remove rendering (admin.html only)
     ├── admin-login.js        admin.html's credential gate — see security note above
     ├── storage.js           in-memory cache + localStorage/backend persistence

@@ -65,8 +65,25 @@
 
   function refreshTodayScreen(){
     Mood.renderTodayCard();
+    renderProgressRow();
     renderStreakRow();
     renderRecommendations();
+  }
+
+  function renderProgressRow(){
+    const today = Storage.todayStr();
+    const todayLogs = Storage.getLogs().filter(l => l.date === today);
+    const items = [
+      { done: !!Storage.getTodayEntry(), label: I18n.t('checkin_title') },
+      { done: todayLogs.some(l => l.category === 'physical'), label: I18n.t('movement') },
+      { done: todayLogs.some(l => l.category === 'mind'), label: I18n.t('mind') }
+    ];
+    document.getElementById('todayProgressRow').innerHTML = items.map(it => `
+      <div class="progress-pill ${it.done ? 'done' : ''}">
+        <span class="progress-dot" aria-hidden="true">${it.done ? '\u2713' : ''}</span>
+        <span>${it.label}</span>
+      </div>
+    `).join('');
   }
 
   function renderStreakRow(){
@@ -143,6 +160,19 @@
     toast.classList.add('visible');
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2400);
+  }
+
+  async function maybeShowOnboarding(){
+    let acknowledged = false;
+    try{ acknowledged = localStorage.getItem('mindora_disclaimer_ack') === 'true'; }catch(e){}
+    if(acknowledged) return;
+    await Modal.confirmDialog({
+      title: I18n.t('onboarding_title'),
+      body: I18n.t('onboarding_body'),
+      checkboxLabel: I18n.t('onboarding_checkbox_label'),
+      confirmText: I18n.t('onboarding_continue_btn')
+    });
+    try{ localStorage.setItem('mindora_disclaimer_ack', 'true'); }catch(e){}
   }
 
   // ---------- Chat screen ----------
@@ -477,8 +507,15 @@
       downloadFile(`mindora-export-${Storage.todayStr()}.csv`, Storage.exportAllAsCsv(), 'text/csv');
       showToast(I18n.t('toast_exported'));
     });
-    document.getElementById('clearDataBtn').addEventListener('click', () => {
-      if(confirm(I18n.t('clear_data_confirm'))){
+    document.getElementById('clearDataBtn').addEventListener('click', async () => {
+      const ok = await Modal.confirmDialog({
+        title: I18n.t('clear_data'),
+        body: I18n.t('clear_data_confirm'),
+        confirmText: I18n.t('clear_data'),
+        cancelText: I18n.t('btn_cancel'),
+        danger: true
+      });
+      if(ok){
         Storage.clearProfileData();
         refreshTodayScreen();
         Tracker.renderTrackerScreen();
@@ -505,6 +542,9 @@
       renderRecommendations();
     };
     window.MindoraShowToast = showToast;
+
+    // First-launch disclaimer acknowledgment — once per browser, not per profile
+    await maybeShowOnboarding();
 
     // Try to resume an existing session before showing the profile gate
     const session = await Profiles.resumeSession();

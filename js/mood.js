@@ -163,6 +163,16 @@ const Mood = (function(){
     return I18n.t('greeting_night');
   }
 
+  // A short, qualitative read on the day, tied to the orb's colour — meant
+  // to feel more like a companion's observation than a status label.
+  function moodDescriptor(value){
+    if(value <= 2) return I18n.t('mood_desc_1');
+    if(value <= 4) return I18n.t('mood_desc_2');
+    if(value <= 6) return I18n.t('mood_desc_3');
+    if(value <= 8) return I18n.t('mood_desc_4');
+    return I18n.t('mood_desc_5');
+  }
+
   function renderTodayCard(){
     const settings = Storage.getSettings();
     const name = settings.name ? `, ${settings.name}` : '';
@@ -176,7 +186,7 @@ const Mood = (function(){
     if(today){
       promptCard.classList.add('hidden');
       summaryCard.classList.remove('hidden');
-      subline.textContent = I18n.t('subline_done');
+      subline.textContent = moodDescriptor(today.mood);
       renderOrb(today.mood);
       const body = document.getElementById('todaySummaryBody');
       const tagsHtml = today.tags.length

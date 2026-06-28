@@ -79,7 +79,14 @@ const Admin = (function(){
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-remove-profile');
         const name = btn.getAttribute('data-remove-name');
-        if(!confirm(I18n.t('admin_remove_confirm', { name }))) return;
+        const ok = await Modal.confirmDialog({
+          title: I18n.t('admin_remove'),
+          body: I18n.t('admin_remove_confirm', { name }),
+          confirmText: I18n.t('admin_remove'),
+          cancelText: I18n.t('btn_cancel'),
+          danger: true
+        });
+        if(!ok) return;
         btn.disabled = true;
         try{
           await Profiles.removeProfile(id);
