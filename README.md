@@ -31,67 +31,106 @@ one device. To get profiles that follow you across browsers/devices, deploy
 the Apps Script backend below — it's the same Google Apps Script + Sheets
 pattern used in your other tools (SmartSaver, the expense tracker, PCFB).
 
-## Admin: managing profiles
+## Admin: a separate, gated page
 
-Settings has a **Manage profiles** card listing every profile by name only
-— PINs are never shown there, in either direction. It can:
+Profile management moved out of the main app entirely and into its own
+page: **`admin.html`**, not linked from anywhere in the main app's UI.
 
-- **Remove** a profile (with a confirm dialog) — deletes that profile's
-  data entirely (mood entries, logs, the profile row itself in remote
-  mode). If you remove the profile that's currently logged in, the app
-  drops back to the login screen.
-- **Add** a profile on someone else's behalf (e.g. setting one up for a
-  child) — this still requires entering a name and PIN *for that new
-  profile* (since that's how they'll log in later), but it does **not**
-  switch your own active session to it, so you stay logged in as yourself.
+**Read this before relying on it.** This is a static site with no server.
+Anything checked in JavaScript runs in the visitor's browser, where it can
+be read (View Source / DevTools) and bypassed by anyone who actually tries.
+Hashing the credential (SHA-256, not the plaintext) means the password
+isn't sitting in plain text in the file, but that's a courtesy against
+casual snooping, not real security — and if your GitHub repo is public,
+`admin.html` and its hash are visible to anyone browsing the repo on
+GitHub, whether or not they ever open the page. `robots.txt` asks search
+engines not to index it, which helps with accidental discovery, not
+determined access. Treat this the same way you'd treat an unlisted phone
+number — private by default, not by lock.
 
-There's no separate admin login — whoever can already reach Settings (i.e.
-whoever is logged into a profile on this device) can manage profiles. This
-was a deliberate simplicity choice for a personal/family tool; it means
-admin capability is implicitly available to anyone with a working profile
-on the device, not gated behind a second credential.
+**Default credentials**: username `mind_admin`, password `MindAdmin123$`.
+To change them: compute a new SHA-256 hash of `username:password` (e.g.
+`node -e "console.log(require('crypto').createHash('sha256').update('newuser:newpass').digest('hex'))"`)
+and replace `EXPECTED_HASH` in `js/admin-login.js`. The login is **not**
+remembered between visits — there's no saved session token, since a
+"logged in" flag sitting in localStorage would itself be a one-line bypass
+for anyone in dev tools. You re-enter credentials each time.
 
-In remote mode this calls two new Apps Script actions (`listProfiles`,
-`deleteProfile`) added to `apps-script/Code.gs` — redeploy with "New
-version" (see the gotcha above) if you've already deployed an older
-version of the script.
+Once logged in, admin.html can:
+
+- **Approve** a pending profile — new profiles created through the main
+  app's "Create profile" screen now start as **pending** and can't log in
+  until approved here. Profiles added directly through admin.html skip
+  this, since you're vouching for them yourself.
+- **Add** a profile on someone else's behalf (auto-approved)
+- **Remove** a profile entirely (with a confirm dialog, cascades to delete
+  their data)
+
+Names and status are shown; **PINs are never displayed**, in either
+direction. In remote mode this needs the Apps Script actions already
+added to `apps-script/Code.gs` (`listProfiles`, `approveProfile`,
+`deleteProfile`) plus a new `status` column on the `Profiles` sheet — if
+you already deployed an older version of the script, re-running `setup()`
+won't retroactively add the column to an existing sheet; add a `status`
+header to column F yourself, or delete and recreate the sheet if it's
+still empty. Redeploy with "New version" either way (see the gotcha
+above).
+
+If you want something genuinely harder to bypass than this, the real fix
+is server-side verification — checking the admin password inside
+`Code.gs` itself (which runs on Google's servers, never sent to the
+browser) rather than in client-side JS. That's a meaningfully different
+security model and isn't built here; ask if you want it added on top of
+remote mode.
 
 ## Look and feel
 
 - Inline SVG favicon matching the brand gradient
 - Tactile press feedback (`:active` scale) on all primary buttons
-- The "good day" reinforcement message in recommendations now gets a sage
+- The "good day" reinforcement message in recommendations gets a sage
   border instead of the neutral indigo one, so positive feedback reads
   differently from a routine nudge at a glance
-- The profile screen's brand mark now pulses gently, same animation as the
-  in-app mood orb, for a more cohesive first impression before you've even
-  logged in
+- The profile screen's brand mark pulses gently, same animation as the
+  in-app mood orb, with its own ambient gradient background (previously
+  this only showed on wide viewports) for a considered first impression
+  even on a phone
 - A muted "Mindora v1.0" version line sits at the bottom of the profile
   screen and the Disclaimer card in Settings
+- A small toast notification confirms actions that used to happen silently
+  — check-in saved, logged, profile added/removed, settings saved, data
+  exported/cleared — so the app gives feedback instead of just navigating
+  away
+- The active tab in the bottom nav sits on a soft coral pill instead of
+  just changing icon colour, closer to how native app tab bars read
+- Slightly tightened heading letter-spacing and bumped base line-height for
+  a calmer, more readable rhythm throughout
 
 ## Extended check-in
 
 The daily check-in still leads with mood, tags, sleep, stress, and an
 optional journal — that stays quick by design. Below it now sits a
 collapsed "**+ A few more questions (optional)**" panel covering energy,
-enjoyment/interest, social connection, focus, and appetite. These cover
-similar ground to domains used in common mental-health screening
-questionnaires (mood, interest/pleasure, energy, concentration, connection),
-but deliberately **not** as a scored clinical instrument — there's no
-composite score, no severity band, no diagnostic label. Each is a plain
-1–10 slider (appetite is a single-select chip), feeding the same
-transparent rule-based recommendation engine as everything else.
+enjoyment/interest, social connection, focus, sleep quality, physical
+tension, outlook for tomorrow, and appetite. These cover similar ground to
+domains used in common mental-health screening questionnaires (mood,
+interest/pleasure, energy, concentration, connection), but deliberately
+**not** as a scored clinical instrument — there's no composite score, no
+severity band, no diagnostic label. Each is a plain 1–10 slider (appetite
+is a single-select chip), feeding the same transparent rule-based
+recommendation engine as everything else.
 
-Important data-integrity detail: these five fields only get saved as
+Important data-integrity detail: these eight fields only get saved as
 non-null if the person actually expanded that panel. If they never open it,
 the fields stay `null` rather than silently recording default slider
 values — so trends and recommendations are never built on answers nobody
 actually gave. When editing a check-in that already has these filled in,
 the panel auto-expands so they can see what they answered.
 
-Two new escalation/routine rules came out of this: sustained low
-enjoyment over 3+ days (escalation tier, same severity as sustained low
-mood) and isolated low energy / low connection days (routine tier).
+New escalation/routine rules came out of this: sustained low enjoyment
+*and* sustained low outlook over 3+ days (escalation tier, same severity as
+sustained low mood — anhedonia and hopelessness are both meaningful
+signals worth treating the same way), plus routine nudges for isolated low
+energy, low connection, poor sleep quality, and high physical tension days.
 
 ## Well-being section
 
@@ -240,15 +279,18 @@ worse than no translation at all.
 
 ```
 mindora/
-├── index.html           profile gate + screen shell
-├── css/style.css         design tokens + layout
+├── index.html           main app: profile gate + screen shell
+├── admin.html            separate, unlinked admin page (see Admin section)
+├── robots.txt            asks search engines not to index admin.html
+├── css/style.css         design tokens + layout (shared by both pages)
 ├── apps-script/Code.gs   optional backend for cross-device profiles
 └── js/
     ├── i18n.js            language dictionaries + translation helper
     ├── config.js          APPS_SCRIPT_URL (empty = local-only mode)
     ├── api.js             JSONP client for the backend
-    ├── profiles.js         create/login/resume/logout, local or remote
-    ├── admin.js             manage profiles (add/remove) without showing PINs
+    ├── profiles.js         self-register/login/resume/logout, local or remote
+    ├── admin.js             profile list/approve/add/remove rendering (admin.html only)
+    ├── admin-login.js        admin.html's credential gate — see security note above
     ├── storage.js           in-memory cache + localStorage/backend persistence
     ├── recommend.js          crisis + escalation + routine recommendation engine
     ├── mood.js                check-in form, mood orb visual, tag chips

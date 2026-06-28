@@ -35,7 +35,7 @@ function setup(){
 
   if(!ss.getSheetByName(SHEET_PROFILES)){
     var p = ss.insertSheet(SHEET_PROFILES);
-    p.appendRow(['profileId','name','pin','settingsJson','createdAt']);
+    p.appendRow(['profileId','name','pin','settingsJson','createdAt','status']);
   }
   if(!ss.getSheetByName(SHEET_MOOD)){
     var m = ss.insertSheet(SHEET_MOOD);
@@ -54,9 +54,10 @@ function doGet(e){
 
   try{
     switch(action){
-      case 'createProfile': result = createProfile(e.parameter.name, e.parameter.pin); break;
+      case 'createProfile': result = createProfile(e.parameter.name, e.parameter.pin, e.parameter.asAdmin === 'true'); break;
       case 'login': result = login(e.parameter.name, e.parameter.pin); break;
       case 'listProfiles': result = listProfiles(); break;
+      case 'approveProfile': result = approveProfile(e.parameter.profileId); break;
       case 'deleteProfile': result = deleteProfile(e.parameter.profileId); break;
       case 'getData': result = getData(e.parameter.profileId); break;
       case 'saveMood': result = saveMood(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
@@ -91,7 +92,7 @@ function findProfileRow(name){
   var data = sheet.getDataRange().getValues();
   for(var i=1;i<data.length;i++){
     if(String(data[i][1]).toLowerCase() === String(name).toLowerCase()){
-      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3] };
+      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3], status: data[i][5] || 'approved' };
     }
   }
   return null;
@@ -102,7 +103,7 @@ function findProfileById(profileId){
   var data = sheet.getDataRange().getValues();
   for(var i=1;i<data.length;i++){
     if(String(data[i][0]) === String(profileId)){
-      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3] };
+      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3], status: data[i][5] || 'approved' };
     }
   }
   return null;
@@ -110,7 +111,7 @@ function findProfileById(profileId){
 
 // ---------- Profile actions ----------
 
-function createProfile(name, pin){
+function createProfile(name, pin, asAdmin){
   name = (name || '').trim();
   if(!name) return { error: 'NAME_REQUIRED' };
   if(!pin || String(pin).length < 4) return { error: 'PIN_TOO_SHORT' };
@@ -119,25 +120,40 @@ function createProfile(name, pin){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
   var profileId = Utilities.getUuid();
   var settings = defaultSettings(name, 'en');
-  sheet.appendRow([profileId, name, String(pin), JSON.stringify(settings), new Date().toISOString()]);
-  return { profileId: profileId, name: name };
+  var status = asAdmin ? 'approved' : 'pending';
+  sheet.appendRow([profileId, name, String(pin), JSON.stringify(settings), new Date().toISOString(), status]);
+  return { profileId: profileId, name: name, status: status };
 }
 
 function login(name, pin){
   var match = findProfileRow(name);
   if(!match || String(match.pin) !== String(pin)) return { error: 'INVALID' };
+  if(match.status !== 'approved') return { error: 'PENDING_APPROVAL' };
   return { profileId: match.profileId, name: match.name };
 }
 
-// Admin: list profile names only — PINs are intentionally never returned.
+// Admin: list profile names + status only — PINs are intentionally never returned.
 function listProfiles(){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
   var data = sheet.getDataRange().getValues();
   var profiles = [];
   for(var i=1;i<data.length;i++){
-    profiles.push({ profileId: data[i][0], name: data[i][1] });
+    profiles.push({ profileId: data[i][0], name: data[i][1], status: data[i][5] || 'approved' });
   }
   return { profiles: profiles };
+}
+
+// Admin: flips a pending profile to approved so it can log in.
+function approveProfile(profileId){
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
+  var data = sheet.getDataRange().getValues();
+  for(var i=1;i<data.length;i++){
+    if(String(data[i][0]) === String(profileId)){
+      sheet.getRange(i+1, 6).setValue('approved');
+      return { ok: true };
+    }
+  }
+  return { error: 'PROFILE_NOT_FOUND' };
 }
 
 // Admin: removes a profile row plus all of their mood entries and exercise

@@ -1,11 +1,10 @@
 /* ====================================================
    MINDORA — admin.js
-   Lets the person managing this device add or remove profiles
-   from Settings, with no separate login of its own — whoever is
-   already in Settings can use it. Names are listed; PINs never
-   are, in either direction (adding a profile here still requires
-   typing that profile's own PIN, same as the normal create flow,
-   it just doesn't switch the active session to it).
+   Profile management for the standalone admin page
+   (admin.html) — approve, add, or remove profiles. PINs are
+   never shown here, in either direction. This module assumes
+   the credential gate in js/admin-login.js has already run;
+   it doesn't check who's calling it itself.
    ==================================================== */
 
 const Admin = (function(){
@@ -37,18 +36,44 @@ const Admin = (function(){
       return;
     }
 
-    const current = Profiles.getSession();
-    list.innerHTML = profiles.map(p => {
-      const isCurrent = current && current.id === p.profileId;
+    // Pending profiles first, so the thing most likely to need action is on top.
+    const sorted = profiles.slice().sort((a,b) => {
+      const ap = (a.status || 'approved') === 'pending' ? 0 : 1;
+      const bp = (b.status || 'approved') === 'pending' ? 0 : 1;
+      return ap - bp;
+    });
+
+    list.innerHTML = sorted.map(p => {
+      const isPending = (p.status || 'approved') === 'pending';
+      const badge = isPending
+        ? `<span class="admin-badge pending">${I18n.t('admin_status_pending')}</span>`
+        : `<span class="admin-badge approved">${I18n.t('admin_status_approved')}</span>`;
       return `
-      <div class="activity-row${isCurrent ? ' admin-current-row' : ''}">
+      <div class="activity-row">
         <div class="activity-main">
-          <div class="activity-title">${escapeHtml(p.name)}</div>
+          <div class="activity-title">${escapeHtml(p.name)} ${badge}</div>
         </div>
-        <button class="btn-danger admin-remove-btn" data-remove-profile="${p.profileId}" data-remove-name="${escapeHtml(p.name)}">${I18n.t('admin_remove')}</button>
+        <div style="display:flex; gap:6px;">
+          ${isPending ? `<button class="btn-secondary admin-approve-btn" data-approve-profile="${p.profileId}">${I18n.t('admin_approve')}</button>` : ''}
+          <button class="btn-danger admin-remove-btn" data-remove-profile="${p.profileId}" data-remove-name="${escapeHtml(p.name)}">${I18n.t('admin_remove')}</button>
+        </div>
       </div>
     `;
     }).join('');
+
+    list.querySelectorAll('[data-approve-profile]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-approve-profile');
+        btn.disabled = true;
+        try{
+          await Profiles.approveProfile(id);
+          await render();
+        }catch(e){
+          console.error('Mindora: could not approve profile', e);
+          btn.disabled = false;
+        }
+      });
+    });
 
     list.querySelectorAll('[data-remove-profile]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -59,9 +84,6 @@ const Admin = (function(){
         try{
           await Profiles.removeProfile(id);
           await render();
-          if(typeof window.MindoraOnProfileRemoved === 'function'){
-            window.MindoraOnProfileRemoved(id);
-          }
         }catch(e){
           console.error('Mindora: could not remove profile', e);
           btn.disabled = false;

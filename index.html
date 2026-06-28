@@ -170,6 +170,18 @@
             <input type="range" id="focusSlider" min="1" max="10" value="5" class="mood-slider">
             <div class="mood-slider-labels"><span data-i18n="focus_low">Scattered</span><span id="focusValueLabel" aria-hidden="true">5</span><span data-i18n="focus_high">Clear</span></div>
 
+            <label class="field-label" for="sleepQualitySlider" data-i18n="field_sleep_quality">Sleep quality</label>
+            <input type="range" id="sleepQualitySlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="sleepquality_low">Poor</span><span id="sleepQualityValueLabel" aria-hidden="true">5</span><span data-i18n="sleepquality_high">Great</span></div>
+
+            <label class="field-label" for="tensionSlider" data-i18n="field_tension">Physical tension</label>
+            <input type="range" id="tensionSlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="tension_low">Relaxed</span><span id="tensionValueLabel" aria-hidden="true">5</span><span data-i18n="tension_high">Tense</span></div>
+
+            <label class="field-label" for="outlookSlider" data-i18n="field_outlook">Outlook for tomorrow</label>
+            <input type="range" id="outlookSlider" min="1" max="10" value="5" class="mood-slider">
+            <div class="mood-slider-labels"><span data-i18n="outlook_low">Worried</span><span id="outlookValueLabel" aria-hidden="true">5</span><span data-i18n="outlook_high">Hopeful</span></div>
+
             <p class="field-label" id="appetiteLabel" data-i18n="field_appetite">Appetite</p>
             <div id="appetiteChips" class="chip-row" role="group" aria-labelledby="appetiteLabel"></div>
           </div>
@@ -364,22 +376,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <h3 data-i18n="admin_title">Manage profiles</h3>
-          <p class="muted-inline" data-i18n="admin_note" style="display:block; margin-bottom:10px;">Names only — PINs are never shown here.</p>
-          <div id="adminProfileList" class="activity-log"></div>
-
-          <div class="admin-add-block">
-            <p class="field-label" data-i18n="admin_add_title" style="margin-top:16px;">Add a profile</p>
-            <input type="text" id="adminNewName" data-i18n-placeholder="profile_name_label" placeholder="Name">
-            <input type="password" id="adminNewPin" inputmode="numeric" pattern="[0-9]*" maxlength="8" data-i18n-placeholder="profile_pin_label" placeholder="PIN" style="margin-top:8px;">
-            <div id="adminAddError" class="profile-error hidden" role="alert" aria-live="polite" style="margin-top:8px;"></div>
-            <div class="form-actions">
-              <button id="adminAddBtn" class="btn-secondary full" data-i18n="admin_add_btn">Add profile</button>
-            </div>
-          </div>
-        </div>
-
         <div class="card disclaimer-card">
           <h3 data-i18n="about_title">About Mindora</h3>
           <p class="muted" id="aboutBody" data-i18n="about_body">Mindora helps you notice patterns in your mood and habits over time. It is not a diagnostic tool, it doesn't replace professional care, and any suggestions it makes are based on simple rules you can see — not a clinical assessment. If you're worried about your mental health, a GP, psychologist, or one of the support lines below is the right next step.</p>
@@ -435,7 +431,6 @@
   <script src="js/learn.js"></script>
   <script src="js/wellbeing.js"></script>
   <script src="js/chat.js"></script>
-  <script src="js/admin.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

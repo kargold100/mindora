@@ -118,6 +118,16 @@ const Recommend = (function(){
       }
     }
 
+    // ---- Tier 2e: sustained low outlook on tomorrow (3+ days with data, avg <= 3.5) ----
+    const outlookEntries = last3.filter(e => e.outlook !== null && e.outlook !== undefined);
+    if(outlookEntries.length >= 3){
+      const avgOutlook = average(outlookEntries.map(e => e.outlook));
+      if(avgOutlook !== null && avgOutlook <= 3.5){
+        result.escalation = true;
+        result.recommendations.push({ urgent:true, text: I18n.t('rec_sustained_low_outlook') });
+      }
+    }
+
     // ---- Tier 3: routine nudges (only when no escalation message already covers today) ----
     if(!result.escalation){
       if(today.mood <= 4){
@@ -152,6 +162,14 @@ const Recommend = (function(){
 
     if(today.connection !== null && today.connection !== undefined && today.connection <= 3){
       result.recommendations.push({ text: I18n.t('rec_low_connection') });
+    }
+
+    if(today.sleepQuality !== null && today.sleepQuality !== undefined && today.sleepQuality <= 3){
+      result.recommendations.push({ text: I18n.t('rec_low_sleep_quality') });
+    }
+
+    if(today.tension !== null && today.tension !== undefined && today.tension >= 8){
+      result.recommendations.push({ text: I18n.t('rec_high_tension') });
     }
 
     return result;

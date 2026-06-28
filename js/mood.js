@@ -109,6 +109,9 @@ const Mood = (function(){
     const en = prefill && prefill.enjoyment ? prefill.enjoyment : 5;
     const c = prefill && prefill.connection ? prefill.connection : 5;
     const f = prefill && prefill.focus ? prefill.focus : 5;
+    const sq = prefill && prefill.sleepQuality ? prefill.sleepQuality : 5;
+    const tn = prefill && prefill.tension ? prefill.tension : 5;
+    const ol = prefill && prefill.outlook ? prefill.outlook : 5;
     document.getElementById('energySlider').value = e;
     document.getElementById('energyValueLabel').textContent = e;
     document.getElementById('enjoymentSlider').value = en;
@@ -117,11 +120,17 @@ const Mood = (function(){
     document.getElementById('connectionValueLabel').textContent = c;
     document.getElementById('focusSlider').value = f;
     document.getElementById('focusValueLabel').textContent = f;
+    document.getElementById('sleepQualitySlider').value = sq;
+    document.getElementById('sleepQualityValueLabel').textContent = sq;
+    document.getElementById('tensionSlider').value = tn;
+    document.getElementById('tensionValueLabel').textContent = tn;
+    document.getElementById('outlookSlider').value = ol;
+    document.getElementById('outlookValueLabel').textContent = ol;
 
     renderTagChips();
     renderAppetiteChips();
 
-    const hasExtra = !!(prefill && (prefill.energy || prefill.enjoyment || prefill.connection || prefill.focus || prefill.appetite));
+    const hasExtra = !!(prefill && (prefill.energy || prefill.enjoyment || prefill.connection || prefill.focus || prefill.appetite || prefill.sleepQuality || prefill.tension || prefill.outlook));
     setMoreQuestionsExpanded(hasExtra);
   }
 
@@ -138,6 +147,9 @@ const Mood = (function(){
       enjoyment: panelExpanded ? Number(document.getElementById('enjoymentSlider').value) : null,
       connection: panelExpanded ? Number(document.getElementById('connectionSlider').value) : null,
       focus: panelExpanded ? Number(document.getElementById('focusSlider').value) : null,
+      sleepQuality: panelExpanded ? Number(document.getElementById('sleepQualitySlider').value) : null,
+      tension: panelExpanded ? Number(document.getElementById('tensionSlider').value) : null,
+      outlook: panelExpanded ? Number(document.getElementById('outlookSlider').value) : null,
       appetite: panelExpanded ? selectedAppetite : null
     };
   }
@@ -179,6 +191,9 @@ const Mood = (function(){
       if(today.enjoyment !== null && today.enjoyment !== undefined) extraBits.push(`${I18n.t('field_enjoyment')}: <strong>${today.enjoyment}/10</strong>`);
       if(today.connection !== null && today.connection !== undefined) extraBits.push(`${I18n.t('field_connection')}: <strong>${today.connection}/10</strong>`);
       if(today.focus !== null && today.focus !== undefined) extraBits.push(`${I18n.t('field_focus')}: <strong>${today.focus}/10</strong>`);
+      if(today.sleepQuality !== null && today.sleepQuality !== undefined) extraBits.push(`${I18n.t('field_sleep_quality')}: <strong>${today.sleepQuality}/10</strong>`);
+      if(today.tension !== null && today.tension !== undefined) extraBits.push(`${I18n.t('field_tension')}: <strong>${today.tension}/10</strong>`);
+      if(today.outlook !== null && today.outlook !== undefined) extraBits.push(`${I18n.t('field_outlook')}: <strong>${today.outlook}/10</strong>`);
       if(today.appetite) extraBits.push(`${I18n.t('field_appetite')}: <strong>${I18n.t('appetite_'+today.appetite)}</strong>`);
       const extraHtml = extraBits.length ? `<p class="muted" style="margin-top:6px;">${extraBits.join(' · ')}</p>` : '';
 

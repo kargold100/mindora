@@ -145,6 +145,9 @@ const Storage = (function(){
       enjoyment: (entry.enjoyment === undefined) ? null : entry.enjoyment,
       connection: (entry.connection === undefined) ? null : entry.connection,
       focus: (entry.focus === undefined) ? null : entry.focus,
+      sleepQuality: (entry.sleepQuality === undefined) ? null : entry.sleepQuality,
+      tension: (entry.tension === undefined) ? null : entry.tension,
+      outlook: (entry.outlook === undefined) ? null : entry.outlook,
       appetite: (entry.appetite === undefined) ? null : entry.appetite,
       timestamp: Date.now()
     };
@@ -258,12 +261,12 @@ const Storage = (function(){
 
   function exportAllAsCsv(){
     let rows = [];
-    rows.push(['type','date','mood','tags','sleepHours','stressLevel','energy','enjoyment','connection','focus','appetite','journal','category','activityType','duration','intensity','notes'].join(','));
+    rows.push(['type','date','mood','tags','sleepHours','stressLevel','energy','enjoyment','connection','focus','sleepQuality','tension','outlook','appetite','journal','category','activityType','duration','intensity','notes'].join(','));
     cache.moodEntries.forEach(e=>{
-      rows.push(['mood', e.date, e.mood, (e.tags||[]).join('|'), e.sleepHours ?? '', e.stressLevel ?? '', e.energy ?? '', e.enjoyment ?? '', e.connection ?? '', e.focus ?? '', e.appetite ?? '', `"${(e.journal||'').replace(/"/g,'""')}"`, '','','','',''].join(','));
+      rows.push(['mood', e.date, e.mood, (e.tags||[]).join('|'), e.sleepHours ?? '', e.stressLevel ?? '', e.energy ?? '', e.enjoyment ?? '', e.connection ?? '', e.focus ?? '', e.sleepQuality ?? '', e.tension ?? '', e.outlook ?? '', e.appetite ?? '', `"${(e.journal||'').replace(/"/g,'""')}"`, '','','','',''].join(','));
     });
     cache.exerciseLogs.forEach(l=>{
-      rows.push(['log', l.date, '', '', '', '', '', '', '', '', '', '', l.category, l.type, l.duration, l.intensity ?? '', `"${(l.notes||'').replace(/"/g,'""')}"`].join(','));
+      rows.push(['log', l.date, '', '', '', '', '', '', '', '', '', '', '', '', '', l.category, l.type, l.duration, l.intensity ?? '', `"${(l.notes||'').replace(/"/g,'""')}"`].join(','));
     });
     return rows.join('\n');
   }

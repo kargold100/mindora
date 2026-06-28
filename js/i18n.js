@@ -180,7 +180,21 @@ const LANGS = {
     disclaimer_body: "The information in Learn and Well-being is general and educational only, put together from publicly available knowledge. It isn't personalised advice and hasn't been reviewed by a clinician for your specific situation. Please don't treat anything in this app as a replacement for professional judgement — read it critically, and check anything important with a qualified GP, psychologist, or other professional rather than relying on it alone.",
     admin_title: "Manage profiles", admin_note: "Names only — PINs are never shown here.",
     admin_remove: "Remove", admin_remove_confirm: "Remove {name}'s profile and all their data? This can't be undone.",
-    admin_add_title: "Add a profile", admin_add_btn: "Add profile", admin_empty: "No profiles yet."
+    admin_add_title: "Add a profile", admin_add_btn: "Add profile", admin_empty: "No profiles yet.",
+    field_sleep_quality: "Sleep quality", sleepquality_low: "Poor", sleepquality_high: "Great",
+    field_tension: "Physical tension", tension_low: "Relaxed", tension_high: "Tense",
+    field_outlook: "Outlook for tomorrow", outlook_low: "Worried", outlook_high: "Hopeful",
+    rec_low_sleep_quality: "Sleep quality was low today, even if the hours were okay. Things like screen time before bed or an inconsistent wake time are worth a look.",
+    rec_sustained_low_outlook: "Tomorrow has felt hard to look forward to the last few days. If that continues, it's worth mentioning to a GP or psychologist — it's another one of the more telling signs to pay attention to.",
+    rec_high_tension: "Physical tension is high today. A few minutes of stretching or unclenching your jaw and shoulders can help more than it seems like it would.",
+    toast_checkin_saved: "Check-in saved", toast_log_saved: "Logged", toast_log_deleted: "Removed",
+    toast_name_saved: "Saved", toast_apikey_saved: "API key saved", toast_exported: "Exported",
+    toast_data_cleared: "Data cleared", toast_profile_added: "Profile added", toast_profile_removed: "Profile removed",
+    profile_pending_approval: "Your profile has been created and is waiting for approval. Please check back soon.",
+    profile_pending_login: "This profile is still waiting for approval.",
+    admin_approve: "Approve", admin_status_pending: "Pending", admin_status_approved: "Approved",
+    admin_login_title: "Admin login", admin_login_username: "Username", admin_login_password: "Password",
+    admin_login_btn: "Log in", admin_login_error: "Incorrect username or password.", admin_logout: "Log out"
   },
 
   hi: {
@@ -342,7 +356,21 @@ const LANGS = {
     disclaimer_body: "Learn और Well-being में दी गई जानकारी सिर्फ़ सामान्य और शैक्षिक उद्देश्य के लिए है, जो सार्वजनिक रूप से उपलब्ध ज्ञान से तैयार की गई है। यह आपकी व्यक्तिगत सलाह नहीं है और आपकी विशेष स्थिति के लिए किसी चिकित्सक द्वारा जांची नहीं गई है। कृपया इस ऐप की किसी भी बात को पेशेवर राय का विकल्प न मानें — इसे समझदारी से पढ़ें, और किसी भी महत्वपूर्ण बात की पुष्टि किसी योग्य डॉक्टर, मनोवैज्ञानिक, या अन्य पेशेवर से करें, सिर्फ़ इस पर निर्भर न रहें।",
     admin_title: "प्रोफ़ाइलें प्रबंधित करें", admin_note: "केवल नाम — पिन कभी यहां नहीं दिखाए जाते।",
     admin_remove: "हटाएं", admin_remove_confirm: "{name} की प्रोफ़ाइल और उनका सारा डेटा हटाएं? यह वापस नहीं किया जा सकता।",
-    admin_add_title: "प्रोफ़ाइल जोड़ें", admin_add_btn: "प्रोफ़ाइल जोड़ें", admin_empty: "अभी कोई प्रोफ़ाइल नहीं है।"
+    admin_add_title: "प्रोफ़ाइल जोड़ें", admin_add_btn: "प्रोफ़ाइल जोड़ें", admin_empty: "अभी कोई प्रोफ़ाइल नहीं है।",
+    field_sleep_quality: "नींद की गुणवत्ता", sleepquality_low: "खराब", sleepquality_high: "बहुत अच्छी",
+    field_tension: "शारीरिक तनाव", tension_low: "शांत", tension_high: "तनावग्रस्त",
+    field_outlook: "कल के लिए नज़रिया", outlook_low: "चिंतित", outlook_high: "आशावान",
+    rec_low_sleep_quality: "आज नींद की गुणवत्ता कम रही, भले ही घंटे ठीक हों। सोने से पहले स्क्रीन टाइम या अनियमित जागने का समय देखने लायक है।",
+    rec_sustained_low_outlook: "पिछले कुछ दिनों में कल के बारे में सोचना मुश्किल लगा है। अगर यह जारी रहे, तो डॉक्टर या मनोवैज्ञानिक को बताना उचित है — यह भी ध्यान देने लायक संकेतों में से एक है।",
+    rec_high_tension: "आज शारीरिक तनाव ज़्यादा है। कुछ मिनट स्ट्रेचिंग करना या जबड़े और कंधों को ढीला करना, जितना लगता है उससे ज़्यादा मदद कर सकता है।",
+    toast_checkin_saved: "चेक-इन सेव हो गया", toast_log_saved: "दर्ज हो गया", toast_log_deleted: "हटा दिया गया",
+    toast_name_saved: "सेव हो गया", toast_apikey_saved: "API कुंजी सेव हो गई", toast_exported: "एक्सपोर्ट हो गया",
+    toast_data_cleared: "डेटा मिटा दिया गया", toast_profile_added: "प्रोफ़ाइल जोड़ी गई", toast_profile_removed: "प्रोफ़ाइल हटाई गई",
+    profile_pending_approval: "आपकी प्रोफ़ाइल बना दी गई है और मंज़ूरी का इंतज़ार कर रही है। कृपया थोड़ी देर बाद फिर देखें।",
+    profile_pending_login: "यह प्रोफ़ाइल अभी भी मंज़ूरी का इंतज़ार कर रही है।",
+    admin_approve: "मंज़ूर करें", admin_status_pending: "मंज़ूरी बाकी", admin_status_approved: "मंज़ूर",
+    admin_login_title: "एडमिन लॉगिन", admin_login_username: "यूज़रनेम", admin_login_password: "पासवर्ड",
+    admin_login_btn: "लॉग इन करें", admin_login_error: "यूज़रनेम या पासवर्ड गलत है।", admin_logout: "लॉग आउट"
   },
 
   es: {
@@ -504,7 +532,21 @@ const LANGS = {
     disclaimer_body: "La información en Aprende y Bienestar es solo general y educativa, reunida a partir de conocimiento de acceso público. No es un consejo personalizado y no ha sido revisada por un clínico para tu situación específica. Por favor, no trates nada en esta app como un sustituto del juicio profesional — léelo con criterio, y consulta cualquier cosa importante con un médico, psicólogo u otro profesional calificado en lugar de confiar solo en esto.",
     admin_title: "Gestionar perfiles", admin_note: "Solo nombres — los PIN nunca se muestran aquí.",
     admin_remove: "Eliminar", admin_remove_confirm: "¿Eliminar el perfil de {name} y todos sus datos? Esto no se puede deshacer.",
-    admin_add_title: "Añadir un perfil", admin_add_btn: "Añadir perfil", admin_empty: "Aún no hay perfiles."
+    admin_add_title: "Añadir un perfil", admin_add_btn: "Añadir perfil", admin_empty: "Aún no hay perfiles.",
+    field_sleep_quality: "Calidad del sueño", sleepquality_low: "Mala", sleepquality_high: "Excelente",
+    field_tension: "Tensión física", tension_low: "Relajado", tension_high: "Tenso",
+    field_outlook: "Perspectiva para mañana", outlook_low: "Preocupado", outlook_high: "Esperanzado",
+    rec_low_sleep_quality: "La calidad del sueño fue baja hoy, aunque las horas estuvieran bien. Vale la pena revisar cosas como el tiempo de pantalla antes de dormir o una hora de despertar inconsistente.",
+    rec_sustained_low_outlook: "Mirar hacia el mañana se ha sentido difícil los últimos días. Si continúa, vale la pena mencionarlo a un médico o psicólogo — es otra de las señales más significativas a las que prestar atención.",
+    rec_high_tension: "La tensión física está alta hoy. Unos minutos de estiramiento o destensar la mandíbula y los hombros puede ayudar más de lo que parece.",
+    toast_checkin_saved: "Registro guardado", toast_log_saved: "Registrado", toast_log_deleted: "Eliminado",
+    toast_name_saved: "Guardado", toast_apikey_saved: "Clave de API guardada", toast_exported: "Exportado",
+    toast_data_cleared: "Datos borrados", toast_profile_added: "Perfil añadido", toast_profile_removed: "Perfil eliminado",
+    profile_pending_approval: "Tu perfil ha sido creado y está esperando aprobación. Por favor, vuelve a comprobarlo pronto.",
+    profile_pending_login: "Este perfil todavía está esperando aprobación.",
+    admin_approve: "Aprobar", admin_status_pending: "Pendiente", admin_status_approved: "Aprobado",
+    admin_login_title: "Acceso de administrador", admin_login_username: "Usuario", admin_login_password: "Contraseña",
+    admin_login_btn: "Iniciar sesión", admin_login_error: "Usuario o contraseña incorrectos.", admin_logout: "Cerrar sesión"
   },
 
   fr: {
@@ -667,7 +709,21 @@ const LANGS = {
     disclaimer_body: "Les informations dans Apprendre et Bien-être sont générales et éducatives uniquement, rassemblées à partir de connaissances accessibles au public. Ce n'est pas un conseil personnalisé et cela n'a pas été révisé par un clinicien pour votre situation spécifique. Merci de ne pas considérer quoi que ce soit dans cette application comme un substitut au jugement professionnel — lisez-le avec esprit critique, et vérifiez tout ce qui est important auprès d'un médecin, psychologue ou autre professionnel qualifié plutôt que de vous y fier seul.",
     admin_title: "Gérer les profils", admin_note: "Seulement les noms — les codes PIN ne sont jamais affichés ici.",
     admin_remove: "Supprimer", admin_remove_confirm: "Supprimer le profil de {name} et toutes ses données ? Cette action est irréversible.",
-    admin_add_title: "Ajouter un profil", admin_add_btn: "Ajouter un profil", admin_empty: "Aucun profil pour le moment."
+    admin_add_title: "Ajouter un profil", admin_add_btn: "Ajouter un profil", admin_empty: "Aucun profil pour le moment.",
+    field_sleep_quality: "Qualité du sommeil", sleepquality_low: "Mauvaise", sleepquality_high: "Excellente",
+    field_tension: "Tension physique", tension_low: "Détendu", tension_high: "Tendu",
+    field_outlook: "Perspective pour demain", outlook_low: "Inquiet", outlook_high: "Plein d'espoir",
+    rec_low_sleep_quality: "La qualité du sommeil était faible aujourd'hui, même si les heures étaient correctes. Des choses comme le temps d'écran avant de dormir ou une heure de réveil incohérente méritent d'être examinées.",
+    rec_sustained_low_outlook: "Envisager demain a semblé difficile ces derniers jours. Si cela continue, cela vaut la peine de le mentionner à un médecin ou un psychologue — c'est un autre des signes les plus révélateurs à surveiller.",
+    rec_high_tension: "La tension physique est élevée aujourd'hui. Quelques minutes d'étirement ou desserrer la mâchoire et les épaules peut aider plus qu'il n'y paraît.",
+    toast_checkin_saved: "Point enregistré", toast_log_saved: "Enregistré", toast_log_deleted: "Supprimé",
+    toast_name_saved: "Enregistré", toast_apikey_saved: "Clé API enregistrée", toast_exported: "Exporté",
+    toast_data_cleared: "Données supprimées", toast_profile_added: "Profil ajouté", toast_profile_removed: "Profil supprimé",
+    profile_pending_approval: "Votre profil a été créé et attend une approbation. Revenez bientôt vérifier.",
+    profile_pending_login: "Ce profil est toujours en attente d'approbation.",
+    admin_approve: "Approuver", admin_status_pending: "En attente", admin_status_approved: "Approuvé",
+    admin_login_title: "Connexion administrateur", admin_login_username: "Nom d'utilisateur", admin_login_password: "Mot de passe",
+    admin_login_btn: "Se connecter", admin_login_error: "Nom d'utilisateur ou mot de passe incorrect.", admin_logout: "Se déconnecter"
   },
 
   de: {
@@ -829,7 +885,21 @@ const LANGS = {
     disclaimer_body: "Die Informationen unter Lernen und Wohlbefinden sind nur allgemein und zu Bildungszwecken, zusammengestellt aus öffentlich verfügbarem Wissen. Es ist kein personalisierter Rat und wurde nicht von einem Kliniker für deine spezifische Situation geprüft. Bitte betrachte nichts in dieser App als Ersatz für fachliches Urteil — lies es kritisch, und kläre alles Wichtige mit einem qualifizierten Hausarzt, Psychologen oder einer anderen Fachperson, statt dich allein darauf zu verlassen.",
     admin_title: "Profile verwalten", admin_note: "Nur Namen — PINs werden hier nie angezeigt.",
     admin_remove: "Entfernen", admin_remove_confirm: "Profil von {name} und alle ihre Daten entfernen? Das kann nicht rückgängig gemacht werden.",
-    admin_add_title: "Profil hinzufügen", admin_add_btn: "Profil hinzufügen", admin_empty: "Noch keine Profile."
+    admin_add_title: "Profil hinzufügen", admin_add_btn: "Profil hinzufügen", admin_empty: "Noch keine Profile.",
+    field_sleep_quality: "Schlafqualität", sleepquality_low: "Schlecht", sleepquality_high: "Großartig",
+    field_tension: "Körperliche Anspannung", tension_low: "Entspannt", tension_high: "Verspannt",
+    field_outlook: "Ausblick auf morgen", outlook_low: "Besorgt", outlook_high: "Hoffnungsvoll",
+    rec_low_sleep_quality: "Die Schlafqualität war heute niedrig, auch wenn die Stunden in Ordnung waren. Dinge wie Bildschirmzeit vor dem Schlafen oder eine unregelmäßige Aufwachzeit lohnen einen Blick.",
+    rec_sustained_low_outlook: "Der Blick auf morgen hat sich die letzten Tage schwer angefühlt. Wenn das anhält, lohnt es sich, das einem Hausarzt oder Psychologen zu erzählen — es ist ein weiteres der aufschlussreicheren Zeichen, auf die man achten sollte.",
+    rec_high_tension: "Die körperliche Anspannung ist heute hoch. Ein paar Minuten Dehnen oder Kiefer und Schultern lockern kann mehr helfen, als es scheint.",
+    toast_checkin_saved: "Check-in gespeichert", toast_log_saved: "Eingetragen", toast_log_deleted: "Entfernt",
+    toast_name_saved: "Gespeichert", toast_apikey_saved: "API-Schlüssel gespeichert", toast_exported: "Exportiert",
+    toast_data_cleared: "Daten gelöscht", toast_profile_added: "Profil hinzugefügt", toast_profile_removed: "Profil entfernt",
+    profile_pending_approval: "Dein Profil wurde erstellt und wartet auf Genehmigung. Schau bald wieder vorbei.",
+    profile_pending_login: "Dieses Profil wartet noch auf Genehmigung.",
+    admin_approve: "Genehmigen", admin_status_pending: "Ausstehend", admin_status_approved: "Genehmigt",
+    admin_login_title: "Admin-Anmeldung", admin_login_username: "Benutzername", admin_login_password: "Passwort",
+    admin_login_btn: "Anmelden", admin_login_error: "Benutzername oder Passwort falsch.", admin_logout: "Abmelden"
   },
 
   zh: {
@@ -991,7 +1061,21 @@ const LANGS = {
     disclaimer_body: "「学习」和「日常调养」中的信息仅为一般性和教育性内容，基于公开可获得的知识整理而成。它不是个性化建议，也未经临床医生针对你的具体情况进行审核。请不要将本应用中的任何内容当作专业判断的替代品——请带着批判性思维阅读，重要的事情请向合格的全科医生、心理医生或其他专业人士核实，而不要仅仅依赖于此。",
     admin_title: "管理账号", admin_note: "仅显示姓名 — PIN码绝不会在此显示。",
     admin_remove: "删除", admin_remove_confirm: "删除{name}的账号及其所有数据？此操作无法撤销。",
-    admin_add_title: "添加账号", admin_add_btn: "添加账号", admin_empty: "暂无账号。"
+    admin_add_title: "添加账号", admin_add_btn: "添加账号", admin_empty: "暂无账号。",
+    field_sleep_quality: "睡眠质量", sleepquality_low: "较差", sleepquality_high: "很好",
+    field_tension: "身体紧张程度", tension_low: "放松", tension_high: "紧张",
+    field_outlook: "对明天的展望", outlook_low: "担忧", outlook_high: "充满希望",
+    rec_low_sleep_quality: "今天的睡眠质量不高，即使睡眠时长还算可以。睡前的屏幕时间，或不规律的起床时间，都值得留意一下。",
+    rec_sustained_low_outlook: "最近几天，期待明天似乎变得很难。如果这种情况持续，值得告诉全科医生或心理医生 — 这也是值得关注的较明显的信号之一。",
+    rec_high_tension: "今天身体的紧张程度较高。花几分钟拉伸一下，或放松一下下巴和肩膀，可能比你想象的更有帮助。",
+    toast_checkin_saved: "打卡已保存", toast_log_saved: "已记录", toast_log_deleted: "已删除",
+    toast_name_saved: "已保存", toast_apikey_saved: "API密钥已保存", toast_exported: "已导出",
+    toast_data_cleared: "数据已清除", toast_profile_added: "账号已添加", toast_profile_removed: "账号已删除",
+    profile_pending_approval: "你的账号已创建，正在等待批准。请稍后再来查看。",
+    profile_pending_login: "此账号仍在等待批准。",
+    admin_approve: "批准", admin_status_pending: "待批准", admin_status_approved: "已批准",
+    admin_login_title: "管理员登录", admin_login_username: "用户名", admin_login_password: "密码",
+    admin_login_btn: "登录", admin_login_error: "用户名或密码不正确。", admin_logout: "退出登录"
   },
 
   ar: {
@@ -1153,7 +1237,21 @@ const LANGS = {
     disclaimer_body: "المعلومات الموجودة في تعلّم والعافية هي معلومات عامة وتعليمية فقط، مُجمَّعة من معرفة متاحة للجميع. إنها ليست نصيحة شخصية ولم يراجعها طبيب مختص بحالتك الخاصة. يُرجى عدم اعتبار أي شيء في هذا التطبيق بديلًا عن الحكم المهني — اقرأه بعقل ناقد، وتحقّق من أي أمر مهم مع طبيب عام مؤهل أو معالج نفسي أو مختص آخر، بدلًا من الاعتماد عليه وحده.",
     admin_title: "إدارة الملفات الشخصية", admin_note: "الأسماء فقط — لا تُعرض الرموز السرية هنا أبدًا.",
     admin_remove: "إزالة", admin_remove_confirm: "إزالة ملف {name} وكل بياناته؟ لا يمكن التراجع عن هذا.",
-    admin_add_title: "إضافة ملف شخصي", admin_add_btn: "إضافة ملف شخصي", admin_empty: "لا توجد ملفات شخصية بعد."
+    admin_add_title: "إضافة ملف شخصي", admin_add_btn: "إضافة ملف شخصي", admin_empty: "لا توجد ملفات شخصية بعد.",
+    field_sleep_quality: "جودة النوم", sleepquality_low: "ضعيفة", sleepquality_high: "ممتازة",
+    field_tension: "التوتر الجسدي", tension_low: "مرتاح", tension_high: "متوتر",
+    field_outlook: "النظرة إلى الغد", outlook_low: "قلق", outlook_high: "متفائل",
+    rec_low_sleep_quality: "كانت جودة النوم منخفضة اليوم، حتى لو كانت عدد الساعات مقبولة. أشياء مثل وقت الشاشة قبل النوم أو وقت استيقاظ غير منتظم تستحق النظر فيها.",
+    rec_sustained_low_outlook: "بدا التفكير في الغد صعبًا في الأيام الأخيرة. إذا استمر ذلك، يستحق ذكره لطبيب عام أو معالج نفسي — إنها علامة أخرى من العلامات الأكثر دلالة التي تستحق الانتباه.",
+    rec_high_tension: "التوتر الجسدي مرتفع اليوم. بضع دقائق من التمدد أو إرخاء الفك والكتفين قد تساعد أكثر مما تتوقع.",
+    toast_checkin_saved: "تم حفظ التسجيل", toast_log_saved: "تم التسجيل", toast_log_deleted: "تم الحذف",
+    toast_name_saved: "تم الحفظ", toast_apikey_saved: "تم حفظ مفتاح API", toast_exported: "تم التصدير",
+    toast_data_cleared: "تم حذف البيانات", toast_profile_added: "تمت إضافة الملف الشخصي", toast_profile_removed: "تمت إزالة الملف الشخصي",
+    profile_pending_approval: "تم إنشاء ملفك الشخصي وهو في انتظار الموافقة. يُرجى التحقق مرة أخرى قريبًا.",
+    profile_pending_login: "هذا الملف الشخصي لا يزال في انتظار الموافقة.",
+    admin_approve: "موافقة", admin_status_pending: "قيد الانتظار", admin_status_approved: "تمت الموافقة",
+    admin_login_title: "تسجيل دخول المسؤول", admin_login_username: "اسم المستخدم", admin_login_password: "كلمة المرور",
+    admin_login_btn: "تسجيل الدخول", admin_login_error: "اسم المستخدم أو كلمة المرور غير صحيحة.", admin_logout: "تسجيل الخروج"
   },
 
   ja: {
@@ -1315,7 +1413,21 @@ const LANGS = {
     disclaimer_body: "「学ぶ」と「ウェルビーイング」内の情報は、一般に公開されている知識をもとにまとめた、一般的・教育的な内容に過ぎません。これは個別化されたアドバイスではなく、あなたの具体的な状況について臨床医によって確認されたものでもありません。このアプリ内のいかなる内容も、専門家の判断の代わりとして扱わないでください — 批判的に読み、重要なことは資格を持つかかりつけ医や心理士、その他の専門家に確認し、これだけに頼らないようにしてください。",
     admin_title: "プロフィールを管理", admin_note: "名前のみ表示されます — PINはここには表示されません。",
     admin_remove: "削除", admin_remove_confirm: "{name}のプロフィールとすべてのデータを削除しますか？元に戻せません。",
-    admin_add_title: "プロフィールを追加", admin_add_btn: "プロフィールを追加", admin_empty: "まだプロフィールがありません。"
+    admin_add_title: "プロフィールを追加", admin_add_btn: "プロフィールを追加", admin_empty: "まだプロフィールがありません。",
+    field_sleep_quality: "睡眠の質", sleepquality_low: "悪い", sleepquality_high: "とても良い",
+    field_tension: "身体の緊張", tension_low: "リラックス", tension_high: "緊張している",
+    field_outlook: "明日への見通し", outlook_low: "不安", outlook_high: "希望が持てる",
+    rec_low_sleep_quality: "今日は睡眠時間が十分でも、睡眠の質が低めでした。寝る前のスクリーンタイムや、起床時間の不規則さなどを見直す価値があります。",
+    rec_sustained_low_outlook: "ここ数日、明日のことを考えるのが難しく感じられています。これが続く場合は、かかりつけ医や心理士に伝える価値があります — これも注目すべき示唆的な兆候の一つです。",
+    rec_high_tension: "今日は身体の緊張が高めです。数分のストレッチや、顎や肩の力を抜くことが、思っている以上に助けになるかもしれません。",
+    toast_checkin_saved: "チェックインを保存しました", toast_log_saved: "記録しました", toast_log_deleted: "削除しました",
+    toast_name_saved: "保存しました", toast_apikey_saved: "APIキーを保存しました", toast_exported: "書き出しました",
+    toast_data_cleared: "データを削除しました", toast_profile_added: "プロフィールを追加しました", toast_profile_removed: "プロフィールを削除しました",
+    profile_pending_approval: "プロフィールが作成され、承認待ちの状態です。しばらくしてからもう一度確認してください。",
+    profile_pending_login: "このプロフィールはまだ承認待ちです。",
+    admin_approve: "承認", admin_status_pending: "承認待ち", admin_status_approved: "承認済み",
+    admin_login_title: "管理者ログイン", admin_login_username: "ユーザー名", admin_login_password: "パスワード",
+    admin_login_btn: "ログイン", admin_login_error: "ユーザー名またはパスワードが正しくありません。", admin_logout: "ログアウト"
   }
 };
 

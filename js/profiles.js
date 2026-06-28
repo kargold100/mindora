@@ -1,9 +1,13 @@
 /* ====================================================
    MINDORA — profiles.js
-   Multiple people can use Mindora. In LOCAL mode each profile is
-   a separate localStorage bucket on this device. In REMOTE mode
-   (APPS_SCRIPT_URL configured) the same name + PIN logs you into
-   the same profile from any browser or device.
+   Multiple people can use Mindora. New profiles created through
+   the normal app start as "pending" and can't log in until the
+   separate admin page approves them. Profiles added directly by
+   the admin are auto-approved, since the admin is vouching for
+   them. In LOCAL mode each profile is a separate localStorage
+   bucket on this device. In REMOTE mode (APPS_SCRIPT_URL
+   configured) the same name + PIN logs you into the same profile
+   from any browser or device.
    ==================================================== */
 
 const Profiles = (function(){
@@ -41,20 +45,21 @@ const Profiles = (function(){
     return Storage._read(LOCAL_PROFILES_KEY, []);
   }
 
-  function createLocalProfile(name, pin){
+  function createLocalProfile(name, pin, status){
+    status = status || 'pending';
     const profiles = getLocalProfiles();
     if(profiles.some(p => p.name.toLowerCase() === name.toLowerCase())){
       throw new Error('NAME_TAKEN');
     }
     const id = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    profiles.push({ id, name, pinHash: simpleHash(pin) });
+    profiles.push({ id, name, pinHash: simpleHash(pin), status });
     Storage._write(LOCAL_PROFILES_KEY, profiles);
     Storage._write('mindora_data_' + id, {
       moodEntries: [], exerciseLogs: [],
       settings: { name, theme: 'dark', language: I18n.getLang() },
       gamification: { xp: 0, checkinStreak: 0, lastCheckinDate: null, moveStreak: 0, lastMoveDate: null, mindStreak: 0, lastMindDate: null }
     });
-    return { id, name };
+    return { id, name, status };
   }
 
   function loginLocalProfile(name, pin){
@@ -63,24 +68,25 @@ const Profiles = (function(){
     if(!match || match.pinHash !== simpleHash(pin)){
       throw new Error('INVALID');
     }
+    if((match.status || 'approved') !== 'approved'){
+      throw new Error('PENDING_APPROVAL');
+    }
     return { id: match.id, name: match.name };
   }
 
   // ---------- Public actions ----------
 
-  async function createProfile(name, pin){
+  // Used by the main app's "Create profile" screen. Always starts pending —
+  // it cannot log itself in, regardless of mode.
+  async function selfRegister(name, pin){
     name = (name || '').trim();
     if(isRemoteMode()){
       const res = await Api.call('createProfile', { name, pin });
       if(res && res.error) throw new Error(res.error);
-      setSession({ id: res.profileId, name: res.name, mode: 'remote' });
-      await Storage.hydrateFromRemote(res.profileId);
-      return res;
+      return { profileId: res.profileId, name: res.name, status: 'pending' };
     } else {
-      const res = createLocalProfile(name, pin);
-      setSession({ id: res.id, name: res.name, mode: 'local' });
-      Storage.hydrateFromLocal(res.id);
-      return res;
+      const res = createLocalProfile(name, pin, 'pending');
+      return { profileId: res.id, name: res.name, status: 'pending' };
     }
   }
 
@@ -93,7 +99,7 @@ const Profiles = (function(){
       await Storage.hydrateFromRemote(res.profileId);
       return res;
     } else {
-      const res = loginLocalProfile(name, pin);
+      const res = loginLocalProfile(name, pin); // throws PENDING_APPROVAL or INVALID
       setSession({ id: res.id, name: res.name, mode: 'local' });
       Storage.hydrateFromLocal(res.id);
       return res;
@@ -123,6 +129,9 @@ const Profiles = (function(){
   }
 
   // ---------- Admin: manage profiles without ever exposing PINs ----------
+  // (The admin page that calls these has its own separate credential gate —
+  // see admin.html / js/admin-login.js. These functions themselves don't
+  // check who's calling; the gate happens before this module is ever used.)
 
   async function listAllProfiles(){
     if(isRemoteMode()){
@@ -130,7 +139,21 @@ const Profiles = (function(){
       if(res && res.error) throw new Error(res.error);
       return res.profiles || [];
     } else {
-      return getLocalProfiles().map(p => ({ profileId: p.id, name: p.name }));
+      return getLocalProfiles().map(p => ({ profileId: p.id, name: p.name, status: p.status || 'approved' }));
+    }
+  }
+
+  async function approveProfile(profileId){
+    if(isRemoteMode()){
+      const res = await Api.call('approveProfile', { profileId });
+      if(res && res.error) throw new Error(res.error);
+    } else {
+      const profiles = getLocalProfiles();
+      const idx = profiles.findIndex(p => p.id === profileId);
+      if(idx !== -1){
+        profiles[idx].status = 'approved';
+        Storage._write(LOCAL_PROFILES_KEY, profiles);
+      }
     }
   }
 
@@ -143,30 +166,28 @@ const Profiles = (function(){
       Storage._write(LOCAL_PROFILES_KEY, profiles);
       try{ localStorage.removeItem('mindora_data_' + profileId); }catch(e){}
     }
-    // If the removed profile is the one currently active, log out so the
-    // session doesn't keep pointing at data that no longer exists.
     const session = getSession();
     if(session && session.id === profileId){
       logout();
     }
   }
 
-  // Creates a profile without switching the current session to it — used by
-  // the admin panel to add a profile on someone else's behalf (e.g. a
-  // parent setting one up for a child) without logging themselves out.
+  // Creates a profile without switching the current session to it, and
+  // auto-approves it since the admin is vouching for it directly — used by
+  // the admin page to add a profile on someone else's behalf.
   async function createProfileSilently(name, pin){
     name = (name || '').trim();
     if(isRemoteMode()){
-      const res = await Api.call('createProfile', { name, pin });
+      const res = await Api.call('createProfile', { name, pin, asAdmin: 'true' });
       if(res && res.error) throw new Error(res.error);
       return res;
     } else {
-      return createLocalProfile(name, pin);
+      return createLocalProfile(name, pin, 'approved');
     }
   }
 
   return {
-    isRemoteMode, createProfile, login, resumeSession, logout, getSession,
-    listAllProfiles, removeProfile, createProfileSilently
+    isRemoteMode, selfRegister, login, resumeSession, logout, getSession,
+    listAllProfiles, approveProfile, removeProfile, createProfileSilently
   };
 })();

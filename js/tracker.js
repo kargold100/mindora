@@ -82,6 +82,7 @@ const Tracker = (function(){
         Storage.deleteLog(btn.getAttribute('data-del-log'));
         renderActivityLog();
         renderTrackerScreen();
+        if(typeof window.MindoraShowToast === 'function') window.MindoraShowToast(I18n.t('toast_log_deleted'));
       });
     });
   }

@@ -53,7 +53,6 @@
     if(name === 'today') refreshTodayScreen();
     if(name === 'chat') refreshChatScreen();
     if(name === 'learn') renderLearnScreen();
-    if(name === 'settings') Admin.render();
     window.scrollTo(0,0);
   }
 
@@ -127,6 +126,23 @@
     a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  let toastTimeout = null;
+  function showToast(message){
+    let toast = document.getElementById('mindoraToast');
+    if(!toast){
+      toast = document.createElement('div');
+      toast.id = 'mindoraToast';
+      toast.className = 'mindora-toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2400);
   }
 
   // ---------- Chat screen ----------
@@ -207,7 +223,9 @@
 
   function setProfileMode(mode){
     profileMode = mode;
-    document.getElementById('profileError').classList.add('hidden');
+    const errEl = document.getElementById('profileError');
+    errEl.classList.add('hidden');
+    errEl.classList.remove('info');
     if(mode === 'create'){
       document.getElementById('profileSubmitBtn').textContent = I18n.t('profile_create_btn');
       document.getElementById('profileToggleBtn').textContent = I18n.t('profile_toggle_to_login');
@@ -217,9 +235,17 @@
     }
   }
 
-  function showProfileError(key){
+  function showProfileError(key, vars){
     const el = document.getElementById('profileError');
-    el.textContent = I18n.t(key);
+    el.classList.remove('info');
+    el.textContent = I18n.t(key, vars);
+    el.classList.remove('hidden');
+  }
+
+  function showProfileInfo(key, vars){
+    const el = document.getElementById('profileError');
+    el.classList.add('info');
+    el.textContent = I18n.t(key, vars);
     el.classList.remove('hidden');
   }
 
@@ -251,14 +277,18 @@
 
     try{
       if(profileMode === 'create'){
-        await Profiles.createProfile(name, pin);
+        await Profiles.selfRegister(name, pin);
+        document.getElementById('profilePinInput').value = '';
+        setProfileMode('login');
+        showProfileInfo('profile_pending_approval');
       } else {
         await Profiles.login(name, pin);
+        await enterApp();
       }
-      await enterApp();
     }catch(e){
       const msg = e.message;
       if(msg === 'NAME_TAKEN') showProfileError('profile_error_taken');
+      else if(msg === 'PENDING_APPROVAL') showProfileError('profile_pending_login');
       else showProfileError('profile_error_notfound');
     }finally{
       btn.disabled = false;
@@ -315,6 +345,7 @@
     document.getElementById('saveCheckinBtn').addEventListener('click', () => {
       Storage.saveMoodEntry(Mood.readForm());
       goToScreen('today');
+      showToast(I18n.t('toast_checkin_saved'));
     });
     document.getElementById('moodSlider').addEventListener('input', e => {
       document.getElementById('moodValueLabel').textContent = e.target.value;
@@ -333,6 +364,15 @@
     });
     document.getElementById('focusSlider').addEventListener('input', e => {
       document.getElementById('focusValueLabel').textContent = e.target.value;
+    });
+    document.getElementById('sleepQualitySlider').addEventListener('input', e => {
+      document.getElementById('sleepQualityValueLabel').textContent = e.target.value;
+    });
+    document.getElementById('tensionSlider').addEventListener('input', e => {
+      document.getElementById('tensionValueLabel').textContent = e.target.value;
+    });
+    document.getElementById('outlookSlider').addEventListener('input', e => {
+      document.getElementById('outlookValueLabel').textContent = e.target.value;
     });
     document.getElementById('moreQuestionsToggle').addEventListener('click', () => {
       const panel = document.getElementById('moreQuestionsPanel');
@@ -360,6 +400,7 @@
         await Tracker.saveFromForm();
         goToScreen('tracker');
         refreshTodayScreen();
+        showToast(I18n.t('toast_log_saved'));
       }catch(e){
         console.error('Mindora: could not save log', e);
       }finally{
@@ -421,22 +462,27 @@
     document.getElementById('saveNameBtn').addEventListener('click', () => {
       Storage.saveSettings({ name: document.getElementById('nameInput').value.trim() });
       refreshTodayScreen();
+      showToast(I18n.t('toast_name_saved'));
     });
     document.getElementById('saveApiKeyBtn').addEventListener('click', () => {
       Chat.setApiKey(document.getElementById('apiKeyInput').value);
       refreshChatScreen();
+      showToast(I18n.t('toast_apikey_saved'));
     });
     document.getElementById('exportJsonBtn').addEventListener('click', () => {
       downloadFile(`mindora-export-${Storage.todayStr()}.json`, Storage.exportAllAsJson(), 'application/json');
+      showToast(I18n.t('toast_exported'));
     });
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       downloadFile(`mindora-export-${Storage.todayStr()}.csv`, Storage.exportAllAsCsv(), 'text/csv');
+      showToast(I18n.t('toast_exported'));
     });
     document.getElementById('clearDataBtn').addEventListener('click', () => {
       if(confirm(I18n.t('clear_data_confirm'))){
         Storage.clearProfileData();
         refreshTodayScreen();
         Tracker.renderTrackerScreen();
+        showToast(I18n.t('toast_data_cleared'));
       }
     });
     document.getElementById('switchProfileBtn').addEventListener('click', () => {
@@ -452,51 +498,13 @@
       showProfileGate();
     });
 
-    // Admin: add a profile on someone else's behalf without switching session
-    document.getElementById('adminAddBtn').addEventListener('click', async () => {
-      const name = document.getElementById('adminNewName').value.trim();
-      const pin = document.getElementById('adminNewPin').value.trim();
-      const errEl = document.getElementById('adminAddError');
-      errEl.classList.add('hidden');
-
-      if(!name || pin.length < 4){
-        errEl.textContent = I18n.t('profile_error_pin');
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      const btn = document.getElementById('adminAddBtn');
-      const original = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = I18n.t('loading');
-      try{
-        await Admin.addProfile(name, pin);
-        document.getElementById('adminNewName').value = '';
-        document.getElementById('adminNewPin').value = '';
-      }catch(e){
-        errEl.textContent = (e.message === 'NAME_TAKEN') ? I18n.t('profile_error_taken') : I18n.t('profile_error_notfound');
-        errEl.classList.remove('hidden');
-      }finally{
-        btn.disabled = false;
-        btn.textContent = original;
-      }
-    });
-
-    // If an admin removes the profile that's currently logged in, fall back to the gate
-    window.MindoraOnProfileRemoved = function(removedId){
-      if(!Profiles.getSession()){
-        Chat.clearChat();
-        chatCrisisFlag = false;
-        showProfileGate();
-      }
-    };
-
     // Exposed so chat.js can force the crisis banner on, independent of mood-based detection
     window.MindoraNotifyChatCrisis = function(){
       chatCrisisFlag = true;
       crisisManuallyCollapsed = false;
       renderRecommendations();
     };
+    window.MindoraShowToast = showToast;
 
     // Try to resume an existing session before showing the profile gate
     const session = await Profiles.resumeSession();
