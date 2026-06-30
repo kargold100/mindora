@@ -1,11 +1,14 @@
 /* ====================================================
    MINDORA — trends.js
-   Mood line chart, monthly heatmap, snapshot stats, tag frequency.
+   Mood line chart, monthly heatmap, snapshot stats, tag
+   frequency, and two insight panels (weekday averages and a
+   simple "what seems to help" comparison). Charts are drawn by
+   js/charts.js — no external dependency, so this screen can't be
+   broken by a CDN request failing.
    ==================================================== */
 
 const Trends = (function(){
 
-  let lineChart = null;
   let currentRange = 7;
 
   function setRange(days){
@@ -13,64 +16,45 @@ const Trends = (function(){
     renderAll();
   }
 
+  // Each section renders independently — if one throws, the others
+  // still show, rather than one bad section blanking the whole screen.
   function renderAll(){
-    renderLineChart();
-    renderHeatmap();
-    renderStats();
-    renderTagFreq();
+    safely(renderLineChart);
+    safely(renderHeatmap);
+    safely(renderStats);
+    safely(renderTagFreq);
+    safely(renderWeekdayInsight);
+    safely(renderComparisonInsight);
+  }
+
+  function safely(fn){
+    try{ fn(); }catch(e){ console.error('Mindora trends render error in', fn.name, e); }
   }
 
   function renderLineChart(){
     const entries = Storage.getMoodEntriesInRange(currentRange);
-    const canvas = document.getElementById('moodLineChart');
+    const container = document.getElementById('moodLineChart');
     const msg = document.getElementById('noMoodDataMsg');
 
     if(entries.length < 2){
-      canvas.classList.add('hidden');
+      container.classList.add('hidden');
       msg.textContent = I18n.t('no_mood_data');
       msg.classList.remove('hidden');
-      if(lineChart){ lineChart.destroy(); lineChart = null; }
+      container.innerHTML = '';
       return;
     }
-    canvas.classList.remove('hidden');
+    container.classList.remove('hidden');
     msg.classList.add('hidden');
 
-    const labels = entries.map(e => {
-      const d = new Date(e.date + 'T00:00:00');
-      return d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
-    });
-    const data = entries.map(e => e.mood);
+    const points = entries.map(e => ({
+      x: formatShort(e.date),
+      y: e.mood
+    }));
 
-    if(lineChart) lineChart.destroy();
-
-    const ctx = canvas.getContext('2d');
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(27,27,47,0.06)';
-    const textColor = isDark ? '#B9B6C3' : '#8A8794';
-
-    lineChart = new Chart(ctx, {
-      type:'line',
-      data:{
-        labels,
-        datasets:[{
-          data,
-          borderColor:'#E8896B',
-          backgroundColor:'rgba(232,137,107,0.12)',
-          borderWidth:2.5,
-          tension:0.35,
-          fill:true,
-          pointRadius:3,
-          pointBackgroundColor:'#6B6F9E'
-        }]
-      },
-      options:{
-        responsive:true,
-        plugins:{ legend:{ display:false } },
-        scales:{
-          y:{ min:0, max:10, ticks:{ stepSize:2, color:textColor }, grid:{ color:gridColor } },
-          x:{ ticks:{ color:textColor, maxRotation:0, autoSkip:true }, grid:{ display:false } }
-        }
-      }
+    Charts.renderLine(container, points, {
+      min: 0, max: 10, ySteps: 5,
+      valueSuffix: '/10',
+      ariaLabel: I18n.t('mood_over_time')
     });
   }
 
@@ -142,14 +126,95 @@ const Trends = (function(){
       container.innerHTML = `<div class="empty-state">${I18n.t('no_tags')}</div>`;
       return;
     }
-    const max = sorted[0][1];
-    container.innerHTML = sorted.map(([tag,count]) => `
-      <div class="tagfreq-row">
-        <span class="tagfreq-name">${I18n.t('tag_' + tag)}</span>
-        <span class="tagfreq-bar-wrap"><span class="tagfreq-bar" style="width:${(count/max)*100}%"></span></span>
-        <span class="tagfreq-count">${count}</span>
-      </div>
-    `).join('');
+    Charts.renderHBars(container, sorted.map(([tag,count]) => ({
+      label: I18n.t('tag_' + tag), value: count
+    })));
+  }
+
+  // ---------- Insight: average mood by day of week ----------
+
+  function renderWeekdayInsight(){
+    const container = document.getElementById('weekdayInsight');
+    if(!container) return;
+    const entries = Storage.getMoodEntries(); // full history reads better here than a short range
+    if(entries.length < 7){
+      container.innerHTML = `<p class="empty-state">${I18n.t('insights_not_enough_data')}</p>`;
+      return;
+    }
+
+    const dayKeys = ['weekday_sun','weekday_mon','weekday_tue','weekday_wed','weekday_thu','weekday_fri','weekday_sat'];
+    const sums = [0,0,0,0,0,0,0];
+    const counts = [0,0,0,0,0,0,0];
+    entries.forEach(e => {
+      const d = new Date(e.date + 'T00:00:00');
+      const idx = d.getDay();
+      sums[idx] += e.mood;
+      counts[idx] += 1;
+    });
+
+    // Display Monday first, matching the week layout most people expect
+    const order = [1,2,3,4,5,6,0];
+    const bars = order
+      .filter(i => counts[i] > 0)
+      .map(i => ({
+        label: I18n.t(dayKeys[i]),
+        value: sums[i] / counts[i],
+        max: 10,
+        display: (sums[i] / counts[i]).toFixed(1)
+      }));
+
+    Charts.renderHBars(container, bars);
+  }
+
+  // ---------- Insight: simple "what seems to help" comparison ----------
+
+  function renderComparisonInsight(){
+    const container = document.getElementById('comparisonInsight');
+    if(!container) return;
+    const entries = Storage.getMoodEntriesInRange(currentRange);
+    if(entries.length < 5){
+      container.innerHTML = `<p class="empty-state">${I18n.t('insights_not_enough_data')}</p>`;
+      return;
+    }
+
+    const moodByDate = {};
+    entries.forEach(e => moodByDate[e.date] = e.mood);
+    const cutoff = Storage.dateStrDaysAgo(currentRange - 1);
+    const logs = Storage.getLogs().filter(l => l.date >= cutoff);
+
+    function compare(category){
+      const daysWith = new Set(logs.filter(l => l.category === category).map(l => l.date));
+      const withMoods = [], withoutMoods = [];
+      Object.keys(moodByDate).forEach(date => {
+        (daysWith.has(date) ? withMoods : withoutMoods).push(moodByDate[date]);
+      });
+      if(withMoods.length < 2 || withoutMoods.length < 2) return null;
+      const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+      return { withAvg: avg(withMoods), withoutAvg: avg(withoutMoods) };
+    }
+
+    const rows = [];
+    const movement = compare('physical');
+    if(movement){
+      rows.push({ label: I18n.t('insights_with_movement'), value: movement.withAvg, max: 10, display: movement.withAvg.toFixed(1) });
+      rows.push({ label: I18n.t('insights_without_movement'), value: movement.withoutAvg, max: 10, display: movement.withoutAvg.toFixed(1) });
+    }
+    const mind = compare('mind');
+    if(mind){
+      rows.push({ label: I18n.t('insights_with_mind'), value: mind.withAvg, max: 10, display: mind.withAvg.toFixed(1) });
+      rows.push({ label: I18n.t('insights_without_mind'), value: mind.withoutAvg, max: 10, display: mind.withoutAvg.toFixed(1) });
+    }
+    const medication = compare('medication');
+    if(medication){
+      rows.push({ label: I18n.t('insights_with_medication'), value: medication.withAvg, max: 10, display: medication.withAvg.toFixed(1) });
+      rows.push({ label: I18n.t('insights_without_medication'), value: medication.withoutAvg, max: 10, display: medication.withoutAvg.toFixed(1) });
+    }
+
+    if(!rows.length){
+      container.innerHTML = `<p class="empty-state">${I18n.t('insights_not_enough_data')}</p>`;
+      return;
+    }
+    Charts.renderHBars(container, rows);
   }
 
   function formatShort(dateStr){

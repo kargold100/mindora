@@ -201,7 +201,22 @@ const LANGS = {
     onboarding_continue_btn: "Continue",
     settings_section_account: "Account", settings_section_data: "Privacy & Data", settings_section_about: "About",
     today_progress_title: "Today's progress",
-    mood_desc_1: "A heavy day", mood_desc_2: "A tough day", mood_desc_3: "A steady day", mood_desc_4: "A good day", mood_desc_5: "A great day"
+    mood_desc_1: "A heavy day", mood_desc_2: "A tough day", mood_desc_3: "A steady day", mood_desc_4: "A good day", mood_desc_5: "A great day",
+    weekday_mon: "Mon", weekday_tue: "Tue", weekday_wed: "Wed", weekday_thu: "Thu", weekday_fri: "Fri", weekday_sat: "Sat", weekday_sun: "Sun",
+    insights_title: "Insights", insights_weekday_title: "Average mood by day of week",
+    insights_comparison_title: "What seems to help", insights_not_enough_data: "Not enough data yet — check in and log a bit more to see insights here.",
+    insights_with_movement: "Days with movement", insights_without_movement: "Days without movement",
+    insights_with_mind: "Days with mind exercise", insights_without_mind: "Days without mind exercise",
+    insights_with_medication: "Days medication taken", insights_without_medication: "Days medication not taken",
+    medications_title: "Medications & Supplements", medications_sub: "Track what you take, see it alongside your mood — not a substitute for your prescriber's guidance.",
+    medications_add_placeholder: "Add a medication or supplement", medications_add_btn: "Add",
+    medications_taken_today: "Taken today", medications_mark_taken: "Mark taken",
+    medications_empty: "No medications or supplements added yet.",
+    medications_remove_confirm: "Remove ‘{name}’ from your list? Past logs won't be deleted.",
+    medications_disclaimer: "Mindora doesn't manage dosages or schedules — it just helps you see whether you took something on a given day. Always follow your prescriber's instructions.",
+    reminder_section_title: "Daily reminder", reminder_time_label: "Remind me by", reminder_off: "Off",
+    reminder_note: "This only works while Mindora is open in a tab — a static site like this can't send notifications when it's closed. If you'd like a real push reminder, consider your phone's own reminders app pointed at this page.",
+    reminder_banner_text: "You haven't checked in yet today.", reminder_banner_cta: "Check in now", reminder_banner_dismiss: "Not now"
   },
 
   hi: {
@@ -384,7 +399,22 @@ const LANGS = {
     onboarding_continue_btn: "जारी रखें",
     settings_section_account: "खाता", settings_section_data: "निजता और डेटा", settings_section_about: "जानकारी",
     today_progress_title: "आज की प्रगति",
-    mood_desc_1: "एक भारी दिन", mood_desc_2: "एक कठिन दिन", mood_desc_3: "एक स्थिर दिन", mood_desc_4: "एक अच्छा दिन", mood_desc_5: "एक बेहतरीन दिन"
+    mood_desc_1: "एक भारी दिन", mood_desc_2: "एक कठिन दिन", mood_desc_3: "एक स्थिर दिन", mood_desc_4: "एक अच्छा दिन", mood_desc_5: "एक बेहतरीन दिन",
+    weekday_mon: "सोम", weekday_tue: "मंगल", weekday_wed: "बुध", weekday_thu: "गुरु", weekday_fri: "शुक्र", weekday_sat: "शनि", weekday_sun: "रवि",
+    insights_title: "जानकारियां", insights_weekday_title: "सप्ताह के हर दिन का औसत मूड",
+    insights_comparison_title: "क्या मदद करता दिख रहा है", insights_not_enough_data: "अभी पर्याप्त डेटा नहीं है — यहां जानकारियां देखने के लिए थोड़ा और चेक-इन और लॉग करें।",
+    insights_with_movement: "गतिविधि वाले दिन", insights_without_movement: "बिना गतिविधि वाले दिन",
+    insights_with_mind: "मन के व्यायाम वाले दिन", insights_without_mind: "बिना मन के व्यायाम वाले दिन",
+    insights_with_medication: "दवा ली गई दिन", insights_without_medication: "दवा नहीं ली गई दिन",
+    medications_title: "दवाएं और सप्लीमेंट", medications_sub: "आप क्या लेते हैं, यह ट्रैक करें और अपने मूड के साथ देखें — यह आपके डॉक्टर की सलाह का विकल्प नहीं है।",
+    medications_add_placeholder: "दवा या सप्लीमेंट जोड़ें", medications_add_btn: "जोड़ें",
+    medications_taken_today: "आज ली गई", medications_mark_taken: "ली हुई चिह्नित करें",
+    medications_empty: "अभी कोई दवा या सप्लीमेंट नहीं जोड़ा गया।",
+    medications_remove_confirm: "‘{name}’ को अपनी सूची से हटाएं? पिछले लॉग नहीं हटेंगे।",
+    medications_disclaimer: "Mindora खुराक या समय-सारणी प्रबंधित नहीं करता — यह सिर्फ़ यह देखने में मदद करता है कि आपने किसी दिन कुछ लिया या नहीं। हमेशा अपने डॉक्टर के निर्देशों का पालन करें।",
+    reminder_section_title: "रोज़ का अनुस्मारक", reminder_time_label: "इस समय तक याद दिलाएं", reminder_off: "बंद",
+    reminder_note: "यह सिर्फ़ तब काम करता है जब Mindora किसी टैब में खुला हो — इस जैसी स्टैटिक साइट बंद होने पर नोटिफिकेशन नहीं भेज सकती। अगर आपको असली पुश रिमाइंडर चाहिए, तो अपने फ़ोन के रिमाइंडर ऐप का इस्तेमाल करें।",
+    reminder_banner_text: "आपने आज अभी तक चेक-इन नहीं किया है।", reminder_banner_cta: "अभी चेक-इन करें", reminder_banner_dismiss: "अभी नहीं"
   },
 
   es: {
@@ -567,7 +597,22 @@ const LANGS = {
     onboarding_continue_btn: "Continuar",
     settings_section_account: "Cuenta", settings_section_data: "Privacidad y datos", settings_section_about: "Acerca de",
     today_progress_title: "Progreso de hoy",
-    mood_desc_1: "Un día pesado", mood_desc_2: "Un día difícil", mood_desc_3: "Un día estable", mood_desc_4: "Un buen día", mood_desc_5: "Un día excelente"
+    mood_desc_1: "Un día pesado", mood_desc_2: "Un día difícil", mood_desc_3: "Un día estable", mood_desc_4: "Un buen día", mood_desc_5: "Un día excelente",
+    weekday_mon: "Lun", weekday_tue: "Mar", weekday_wed: "Mié", weekday_thu: "Jue", weekday_fri: "Vie", weekday_sat: "Sáb", weekday_sun: "Dom",
+    insights_title: "Perspectivas", insights_weekday_title: "Ánimo promedio por día de la semana",
+    insights_comparison_title: "Qué parece ayudar", insights_not_enough_data: "Aún no hay suficientes datos — haz más registros y actividades para ver perspectivas aquí.",
+    insights_with_movement: "Días con movimiento", insights_without_movement: "Días sin movimiento",
+    insights_with_mind: "Días con ejercicio mental", insights_without_mind: "Días sin ejercicio mental",
+    insights_with_medication: "Días que tomaste la medicación", insights_without_medication: "Días sin tomar la medicación",
+    medications_title: "Medicamentos y suplementos", medications_sub: "Registra lo que tomas y compáralo con tu ánimo — no sustituye las indicaciones de tu médico.",
+    medications_add_placeholder: "Añadir un medicamento o suplemento", medications_add_btn: "Añadir",
+    medications_taken_today: "Tomado hoy", medications_mark_taken: "Marcar como tomado",
+    medications_empty: "Aún no se han añadido medicamentos ni suplementos.",
+    medications_remove_confirm: "¿Eliminar ‘{name}’ de tu lista? Los registros pasados no se borrarán.",
+    medications_disclaimer: "Mindora no gestiona dosis ni horarios — solo te ayuda a ver si tomaste algo en un día determinado. Sigue siempre las indicaciones de tu médico.",
+    reminder_section_title: "Recordatorio diario", reminder_time_label: "Recuérdamelo antes de", reminder_off: "Desactivado",
+    reminder_note: "Esto solo funciona mientras Mindora está abierto en una pestaña — un sitio estático como este no puede enviar notificaciones cuando está cerrado. Si quieres un recordatorio push real, usa la app de recordatorios de tu teléfono.",
+    reminder_banner_text: "Todavía no has hecho tu registro de hoy.", reminder_banner_cta: "Registrar ahora", reminder_banner_dismiss: "Ahora no"
   },
 
   fr: {
@@ -751,7 +796,22 @@ const LANGS = {
     onboarding_continue_btn: "Continuer",
     settings_section_account: "Compte", settings_section_data: "Confidentialité et données", settings_section_about: "À propos",
     today_progress_title: "Progrès du jour",
-    mood_desc_1: "Une journée lourde", mood_desc_2: "Une journée difficile", mood_desc_3: "Une journée stable", mood_desc_4: "Une bonne journée", mood_desc_5: "Une excellente journée"
+    mood_desc_1: "Une journée lourde", mood_desc_2: "Une journée difficile", mood_desc_3: "Une journée stable", mood_desc_4: "Une bonne journée", mood_desc_5: "Une excellente journée",
+    weekday_mon: "Lun", weekday_tue: "Mar", weekday_wed: "Mer", weekday_thu: "Jeu", weekday_fri: "Ven", weekday_sat: "Sam", weekday_sun: "Dim",
+    insights_title: "Aperçus", insights_weekday_title: "Humeur moyenne par jour de la semaine",
+    insights_comparison_title: "Ce qui semble aider", insights_not_enough_data: "Pas encore assez de données — faites quelques points et activités de plus pour voir des aperçus ici.",
+    insights_with_movement: "Jours avec mouvement", insights_without_movement: "Jours sans mouvement",
+    insights_with_mind: "Jours avec exercice mental", insights_without_mind: "Jours sans exercice mental",
+    insights_with_medication: "Jours où le médicament a été pris", insights_without_medication: "Jours où le médicament n'a pas été pris",
+    medications_title: "Médicaments et compléments", medications_sub: "Suivez ce que vous prenez, à côté de votre humeur — ne remplace pas les indications de votre prescripteur.",
+    medications_add_placeholder: "Ajouter un médicament ou un complément", medications_add_btn: "Ajouter",
+    medications_taken_today: "Pris aujourd'hui", medications_mark_taken: "Marquer comme pris",
+    medications_empty: "Aucun médicament ni complément ajouté pour le moment.",
+    medications_remove_confirm: "Supprimer « {name} » de votre liste ? Les anciens enregistrements ne seront pas supprimés.",
+    medications_disclaimer: "Mindora ne gère ni les doses ni les horaires — cela vous aide simplement à voir si vous avez pris quelque chose un jour donné. Suivez toujours les indications de votre prescripteur.",
+    reminder_section_title: "Rappel quotidien", reminder_time_label: "Me le rappeler avant", reminder_off: "Désactivé",
+    reminder_note: "Cela ne fonctionne que lorsque Mindora est ouvert dans un onglet — un site statique comme celui-ci ne peut pas envoyer de notifications une fois fermé. Pour un vrai rappel push, utilisez l'application de rappels de votre téléphone.",
+    reminder_banner_text: "Vous n'avez pas encore fait votre point du jour.", reminder_banner_cta: "Faire le point maintenant", reminder_banner_dismiss: "Pas maintenant"
   },
 
   de: {
@@ -934,7 +994,22 @@ const LANGS = {
     onboarding_continue_btn: "Weiter",
     settings_section_account: "Konto", settings_section_data: "Datenschutz & Daten", settings_section_about: "Über",
     today_progress_title: "Heutiger Fortschritt",
-    mood_desc_1: "Ein schwerer Tag", mood_desc_2: "Ein harter Tag", mood_desc_3: "Ein ruhiger Tag", mood_desc_4: "Ein guter Tag", mood_desc_5: "Ein großartiger Tag"
+    mood_desc_1: "Ein schwerer Tag", mood_desc_2: "Ein harter Tag", mood_desc_3: "Ein ruhiger Tag", mood_desc_4: "Ein guter Tag", mood_desc_5: "Ein großartiger Tag",
+    weekday_mon: "Mo", weekday_tue: "Di", weekday_wed: "Mi", weekday_thu: "Do", weekday_fri: "Fr", weekday_sat: "Sa", weekday_sun: "So",
+    insights_title: "Einblicke", insights_weekday_title: "Durchschnittliche Stimmung nach Wochentag",
+    insights_comparison_title: "Was zu helfen scheint", insights_not_enough_data: "Noch nicht genug Daten — checke etwas öfter ein und trage Aktivitäten ein, um hier Einblicke zu sehen.",
+    insights_with_movement: "Tage mit Bewegung", insights_without_movement: "Tage ohne Bewegung",
+    insights_with_mind: "Tage mit mentaler Übung", insights_without_mind: "Tage ohne mentale Übung",
+    insights_with_medication: "Tage mit eingenommenem Medikament", insights_without_medication: "Tage ohne eingenommenes Medikament",
+    medications_title: "Medikamente & Nahrungsergänzung", medications_sub: "Verfolge, was du einnimmst, neben deiner Stimmung — kein Ersatz für die Anweisungen deines Arztes.",
+    medications_add_placeholder: "Medikament oder Nahrungsergänzung hinzufügen", medications_add_btn: "Hinzufügen",
+    medications_taken_today: "Heute eingenommen", medications_mark_taken: "Als eingenommen markieren",
+    medications_empty: "Noch keine Medikamente oder Nahrungsergänzungsmittel hinzugefügt.",
+    medications_remove_confirm: "„{name}“ von deiner Liste entfernen? Frühere Einträge werden nicht gelöscht.",
+    medications_disclaimer: "Mindora verwaltet keine Dosierungen oder Zeitpläne — es hilft dir nur zu sehen, ob du an einem bestimmten Tag etwas eingenommen hast. Befolge immer die Anweisungen deines Arztes.",
+    reminder_section_title: "Tägliche Erinnerung", reminder_time_label: "Erinnere mich bis", reminder_off: "Aus",
+    reminder_note: "Das funktioniert nur, solange Mindora in einem Tab geöffnet ist — eine statische Seite wie diese kann keine Benachrichtigungen senden, wenn sie geschlossen ist. Für eine echte Push-Erinnerung nutze die Erinnerungs-App deines Telefons.",
+    reminder_banner_text: "Du hast dich heute noch nicht eingecheckt.", reminder_banner_cta: "Jetzt einchecken", reminder_banner_dismiss: "Jetzt nicht"
   },
 
   zh: {
@@ -1117,7 +1192,22 @@ const LANGS = {
     onboarding_continue_btn: "继续",
     settings_section_account: "账户", settings_section_data: "隐私与数据", settings_section_about: "关于",
     today_progress_title: "今日进度",
-    mood_desc_1: "沉重的一天", mood_desc_2: "艰难的一天", mood_desc_3: "平稳的一天", mood_desc_4: "不错的一天", mood_desc_5: "很棒的一天"
+    mood_desc_1: "沉重的一天", mood_desc_2: "艰难的一天", mood_desc_3: "平稳的一天", mood_desc_4: "不错的一天", mood_desc_5: "很棒的一天",
+    weekday_mon: "周一", weekday_tue: "周二", weekday_wed: "周三", weekday_thu: "周四", weekday_fri: "周五", weekday_sat: "周六", weekday_sun: "周日",
+    insights_title: "洞察", insights_weekday_title: "每周各天的平均心情",
+    insights_comparison_title: "似乎有帮助的事", insights_not_enough_data: "数据还不够 — 多打几次卡、多记录一些活动，就能在这里看到洞察了。",
+    insights_with_movement: "有运动的日子", insights_without_movement: "没有运动的日子",
+    insights_with_mind: "有心理练习的日子", insights_without_mind: "没有心理练习的日子",
+    insights_with_medication: "服药的日子", insights_without_medication: "未服药的日子",
+    medications_title: "药物与营养品", medications_sub: "记录你服用的内容，并与你的心情对照查看 — 这不能替代医生的指导。",
+    medications_add_placeholder: "添加药物或营养品", medications_add_btn: "添加",
+    medications_taken_today: "今天已服用", medications_mark_taken: "标记为已服用",
+    medications_empty: "还没有添加任何药物或营养品。",
+    medications_remove_confirm: "从列表中删除「{name}」？过去的记录不会被删除。",
+    medications_disclaimer: "Mindora 不管理剂量或服用时间表 — 它只是帮助你查看某一天是否服用了某样东西。请始终遵循医生的指导。",
+    reminder_section_title: "每日提醒", reminder_time_label: "提醒时间", reminder_off: "关闭",
+    reminder_note: "此功能仅在 Mindora 在某个标签页中保持打开时有效 — 像这样的静态网站在关闭后无法发送通知。如果你需要真正的推送提醒，可以使用手机自带的提醒事项应用。",
+    reminder_banner_text: "你今天还没有打卡。", reminder_banner_cta: "立即打卡", reminder_banner_dismiss: "暂不"
   },
 
   ar: {
@@ -1300,7 +1390,22 @@ const LANGS = {
     onboarding_continue_btn: "استمرار",
     settings_section_account: "الحساب", settings_section_data: "الخصوصية والبيانات", settings_section_about: "حول",
     today_progress_title: "تقدّم اليوم",
-    mood_desc_1: "يوم ثقيل", mood_desc_2: "يوم صعب", mood_desc_3: "يوم مستقر", mood_desc_4: "يوم جيد", mood_desc_5: "يوم رائع"
+    mood_desc_1: "يوم ثقيل", mood_desc_2: "يوم صعب", mood_desc_3: "يوم مستقر", mood_desc_4: "يوم جيد", mood_desc_5: "يوم رائع",
+    weekday_mon: "الإثنين", weekday_tue: "الثلاثاء", weekday_wed: "الأربعاء", weekday_thu: "الخميس", weekday_fri: "الجمعة", weekday_sat: "السبت", weekday_sun: "الأحد",
+    insights_title: "رؤى", insights_weekday_title: "متوسط المزاج حسب يوم الأسبوع",
+    insights_comparison_title: "ما يبدو أنه يساعد", insights_not_enough_data: "لا توجد بيانات كافية بعد — سجّل حالتك وأنشطتك أكثر قليلًا لرؤية الرؤى هنا.",
+    insights_with_movement: "أيام بها نشاط حركي", insights_without_movement: "أيام بدون نشاط حركي",
+    insights_with_mind: "أيام بها تمرين ذهني", insights_without_mind: "أيام بدون تمرين ذهني",
+    insights_with_medication: "أيام تم فيها تناول الدواء", insights_without_medication: "أيام لم يُتناول فيها الدواء",
+    medications_title: "الأدوية والمكملات", medications_sub: "تتبّع ما تتناوله، وقارنه بمزاجك — لا يغني عن إرشادات طبيبك.",
+    medications_add_placeholder: "إضافة دواء أو مكمل", medications_add_btn: "إضافة",
+    medications_taken_today: "تم تناوله اليوم", medications_mark_taken: "تحديد كمأخوذ",
+    medications_empty: "لم تتم إضافة أي أدوية أو مكملات بعد.",
+    medications_remove_confirm: "إزالة ‘{name}’ من قائمتك؟ لن يتم حذف السجلات السابقة.",
+    medications_disclaimer: "لا يدير Mindora الجرعات أو المواعيد — إنه فقط يساعدك على معرفة ما إذا كنت قد تناولت شيئًا في يوم معين. اتبع دائمًا تعليمات طبيبك.",
+    reminder_section_title: "تذكير يومي", reminder_time_label: "ذكّرني بحلول", reminder_off: "إيقاف",
+    reminder_note: "يعمل هذا فقط أثناء فتح Mindora في إحدى علامات التبويب — لا يمكن لموقع ثابت كهذا إرسال إشعارات عند إغلاقه. إذا كنت تريد تذكيرًا حقيقيًا عبر الإشعارات، استخدم تطبيق التذكيرات في هاتفك.",
+    reminder_banner_text: "لم تسجّل حالتك اليوم بعد.", reminder_banner_cta: "سجّل الآن", reminder_banner_dismiss: "ليس الآن"
   },
 
   ja: {
@@ -1483,7 +1588,22 @@ const LANGS = {
     onboarding_continue_btn: "続ける",
     settings_section_account: "アカウント", settings_section_data: "プライバシーとデータ", settings_section_about: "について",
     today_progress_title: "今日の進捗",
-    mood_desc_1: "重い一日", mood_desc_2: "つらい一日", mood_desc_3: "落ち着いた一日", mood_desc_4: "良い一日", mood_desc_5: "とても良い一日"
+    mood_desc_1: "重い一日", mood_desc_2: "つらい一日", mood_desc_3: "落ち着いた一日", mood_desc_4: "良い一日", mood_desc_5: "とても良い一日",
+    weekday_mon: "月", weekday_tue: "火", weekday_wed: "水", weekday_thu: "木", weekday_fri: "金", weekday_sat: "土", weekday_sun: "日",
+    insights_title: "インサイト", insights_weekday_title: "曜日別の平均気分",
+    insights_comparison_title: "効果がありそうなこと", insights_not_enough_data: "まだデータが十分ではありません — もう少しチェックインや記録を増やすと、ここにインサイトが表示されます。",
+    insights_with_movement: "運動をした日", insights_without_movement: "運動をしなかった日",
+    insights_with_mind: "心の運動をした日", insights_without_mind: "心の運動をしなかった日",
+    insights_with_medication: "薬を服用した日", insights_without_medication: "薬を服用しなかった日",
+    medications_title: "薬とサプリメント", medications_sub: "服用しているものを記録し、気分と一緒に確認できます — 処方者の指示の代わりにはなりません。",
+    medications_add_placeholder: "薬またはサプリメントを追加", medications_add_btn: "追加",
+    medications_taken_today: "今日服用済み", medications_mark_taken: "服用済みにする",
+    medications_empty: "まだ薬やサプリメントが追加されていません。",
+    medications_remove_confirm: "「{name}」をリストから削除しますか？過去の記録は削除されません。",
+    medications_disclaimer: "Mindoraは用量やスケジュールを管理しません — 特定の日に何かを服用したかどうかを確認する手助けをするだけです。常に処方者の指示に従ってください。",
+    reminder_section_title: "毎日のリマインダー", reminder_time_label: "この時刻までにリマインド", reminder_off: "オフ",
+    reminder_note: "これはMindoraがタブで開かれている間のみ機能します — このような静的サイトは閉じている間は通知を送信できません。本当のプッシュ通知によるリマインダーが必要な場合は、お使いのスマートフォンのリマインダーアプリをご利用ください。",
+    reminder_banner_text: "今日はまだチェックインしていません。", reminder_banner_cta: "今すぐチェックイン", reminder_banner_dismiss: "後で"
   }
 };
 

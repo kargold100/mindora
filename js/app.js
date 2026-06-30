@@ -68,6 +68,27 @@
     renderProgressRow();
     renderStreakRow();
     renderRecommendations();
+    checkReminderBanner();
+  }
+
+  function checkReminderBanner(){
+    const banner = document.getElementById('reminderBanner');
+    const settings = Storage.getSettings();
+    const reminderTime = settings.reminderTime;
+    if(!reminderTime || Storage.getTodayEntry()){
+      banner.classList.add('hidden');
+      return;
+    }
+    const today = Storage.todayStr();
+    let dismissed = false;
+    try{ dismissed = sessionStorage.getItem('mindora_reminder_dismissed_' + today) === 'true'; }catch(e){}
+    if(dismissed){
+      banner.classList.add('hidden');
+      return;
+    }
+    const now = new Date();
+    const nowHHMM = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    banner.classList.toggle('hidden', nowHHMM < reminderTime);
   }
 
   function renderProgressRow(){
@@ -287,6 +308,7 @@
     if(settings.language) setLanguage(settings.language);
     document.getElementById('nameInput').value = settings.name || '';
     document.getElementById('apiKeyInput').value = Chat.getApiKey();
+    document.getElementById('reminderTimeInput').value = settings.reminderTime || '';
     chatCrisisFlag = false;
     Chat.clearChat();
     goToScreen('today');
@@ -371,6 +393,15 @@
       Mood.openForm(Storage.getTodayEntry());
       goToScreen('checkin');
     });
+    document.getElementById('reminderBannerCta').addEventListener('click', () => {
+      Mood.openForm(null);
+      goToScreen('checkin');
+    });
+    document.getElementById('reminderBannerDismiss').addEventListener('click', () => {
+      const today = Storage.todayStr();
+      try{ sessionStorage.setItem('mindora_reminder_dismissed_' + today, 'true'); }catch(e){}
+      document.getElementById('reminderBanner').classList.add('hidden');
+    });
     document.getElementById('cancelCheckinBtn').addEventListener('click', () => goToScreen('today'));
     document.getElementById('saveCheckinBtn').addEventListener('click', () => {
       Storage.saveMoodEntry(Mood.readForm());
@@ -439,6 +470,19 @@
       }
     });
 
+    // Medications & Supplements
+    document.getElementById('medicationAddBtn').addEventListener('click', () => {
+      const input = document.getElementById('medicationNewName');
+      const name = input.value.trim();
+      if(!name) return;
+      Tracker.addMedicationName(name);
+      input.value = '';
+      Tracker.renderMedicationsList();
+    });
+    document.getElementById('medicationNewName').addEventListener('keydown', e => {
+      if(e.key === 'Enter') document.getElementById('medicationAddBtn').click();
+    });
+
     // Trends range tabs
     document.querySelectorAll('.range-tab[data-range]').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -498,6 +542,15 @@
       Chat.setApiKey(document.getElementById('apiKeyInput').value);
       refreshChatScreen();
       showToast(I18n.t('toast_apikey_saved'));
+    });
+    document.getElementById('reminderTimeInput').addEventListener('change', e => {
+      Storage.saveSettings({ reminderTime: e.target.value || null });
+      checkReminderBanner();
+    });
+    document.getElementById('reminderClearBtn').addEventListener('click', () => {
+      document.getElementById('reminderTimeInput').value = '';
+      Storage.saveSettings({ reminderTime: null });
+      checkReminderBanner();
     });
     document.getElementById('exportJsonBtn').addEventListener('click', () => {
       downloadFile(`mindora-export-${Storage.todayStr()}.json`, Storage.exportAllAsJson(), 'application/json');

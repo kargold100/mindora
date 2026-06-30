@@ -11,7 +11,6 @@
 <title>Mindora — a quiet place to check in</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25' r='75%25'%3E%3Cstop offset='0%25' stop-color='%23E8896B'/%3E%3Cstop offset='100%25' stop-color='%236B6F9E'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -89,6 +88,14 @@
           </div>
           <h1 id="greeting" data-i18n="greeting_default">How are you, really?</h1>
           <p id="todaySubline" class="muted" data-i18n="subline_none">You haven't checked in yet today.</p>
+        </div>
+
+        <div id="reminderBanner" class="reminder-banner hidden">
+          <span data-i18n="reminder_banner_text">You haven't checked in yet today.</span>
+          <div class="reminder-banner-actions">
+            <button id="reminderBannerCta" class="link-btn" data-i18n="reminder_banner_cta">Check in now</button>
+            <button id="reminderBannerDismiss" class="link-btn" data-i18n="reminder_banner_dismiss">Not now</button>
+          </div>
         </div>
 
         <div id="checkinPromptCard" class="card cta-card">
@@ -207,7 +214,7 @@
 
         <div class="card">
           <h3 data-i18n="mood_over_time">Mood over time</h3>
-          <canvas id="moodLineChart" height="180" role="img" aria-label="Mood line chart"></canvas>
+          <div id="moodLineChart" class="mindora-linechart"></div>
           <p id="noMoodDataMsg" class="muted hidden" data-i18n="no_mood_data">Check in for a few days to see a trend line here.</p>
         </div>
 
@@ -229,6 +236,18 @@
         <div class="card">
           <h3 data-i18n="tags_shown">What's been showing up</h3>
           <div id="tagFreq" class="tagfreq-list"></div>
+        </div>
+
+        <p class="settings-section-label" data-i18n="insights_title">Insights</p>
+
+        <div class="card">
+          <h3 data-i18n="insights_weekday_title">Average mood by day of week</h3>
+          <div id="weekdayInsight" class="tagfreq-list"></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="insights_comparison_title">What seems to help</h3>
+          <div id="comparisonInsight" class="tagfreq-list"></div>
         </div>
       </section>
 
@@ -259,6 +278,17 @@
         <div class="card">
           <h3 data-i18n="recent_activity">Recent activity</h3>
           <div id="activityLog" class="activity-log"></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="medications_title">Medications &amp; Supplements</h3>
+          <p class="muted" data-i18n="medications_sub" style="margin-bottom:12px;">Track what you take, see it alongside your mood — not a substitute for your prescriber's guidance.</p>
+          <div id="medicationsList" class="activity-log" style="margin-bottom:12px;"></div>
+          <div class="medication-add-row">
+            <input type="text" id="medicationNewName" data-i18n-placeholder="medications_add_placeholder" placeholder="Add a medication or supplement">
+            <button id="medicationAddBtn" class="btn-secondary" data-i18n="medications_add_btn">Add</button>
+          </div>
+          <p class="muted-inline" data-i18n="medications_disclaimer" style="display:block; margin-top:10px;">Mindora doesn't manage dosages or schedules — it just helps you see whether you took something on a given day. Always follow your prescriber's instructions.</p>
         </div>
       </section>
 
@@ -349,6 +379,16 @@
           <select id="settingsLangSelect" class="select-input"></select>
         </div>
 
+        <div class="card">
+          <h3 data-i18n="reminder_section_title">Daily reminder</h3>
+          <label class="field-label" for="reminderTimeInput" data-i18n="reminder_time_label">Remind me by</label>
+          <input type="time" id="reminderTimeInput">
+          <div class="form-actions">
+            <button id="reminderClearBtn" class="btn-ghost full" data-i18n="reminder_off">Off</button>
+          </div>
+          <p class="muted-inline" data-i18n="reminder_note" style="display:block; margin-top:10px;">This only works while Mindora is open in a tab — a static site like this can't send notifications when it's closed. If you'd like a real push reminder, consider your phone's own reminders app pointed at this page.</p>
+        </div>
+
         <p class="settings-section-label" data-i18n="settings_section_data">Privacy &amp; Data</p>
         <div class="card">
           <h3 data-i18n="field_api_key">Anthropic API key</h3>
@@ -433,6 +473,7 @@
   <script src="js/recommend.js"></script>
   <script src="js/mood.js"></script>
   <script src="js/tracker.js"></script>
+  <script src="js/charts.js"></script>
   <script src="js/trends.js"></script>
   <script src="js/learn.js"></script>
   <script src="js/wellbeing.js"></script>

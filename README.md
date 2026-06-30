@@ -31,6 +31,76 @@ one device. To get profiles that follow you across browsers/devices, deploy
 the Apps Script backend below — it's the same Google Apps Script + Sheets
 pattern used in your other tools (SmartSaver, the expense tracker, PCFB).
 
+## Trends — what was actually broken, and the fix
+
+The previous version loaded **Chart.js from an external CDN** in `<head>`.
+If that request was ever blocked or failed — ad blockers, content
+blockers, certain corporate/regional networks, or just a flaky load — the
+global `Chart` was undefined, `new Chart(...)` threw, and because nothing
+caught that error, every *other* Trends section (heatmap, stats, tag
+frequency) silently stopped rendering too, since they all ran one after
+another in the same function and the chart's crash stopped the rest from
+executing. The whole screen could look empty even though only the line
+chart itself depended on the missing library.
+
+The fix removes that dependency entirely. `js/charts.js` is a small,
+dependency-free SVG line-chart renderer with zero external requests —
+nothing to fail to load, no version mismatches, no CDN to go down. Colours
+are set via `style="stroke:var(--bloom)"` etc., so the chart re-themes
+automatically with light/dark mode, no JS recompilation needed on toggle.
+On top of that, `Trends.renderAll()` now wraps each section in its own
+try/catch, so even if something unexpected does go wrong in one part (the
+chart, the heatmap, an insight panel), the rest of the screen still
+renders instead of the whole thing going blank.
+
+## New: Insights
+
+Two new panels on the Trends screen, inspired by the "see if a treatment
+had a positive or negative effect" bar charts on sites like moodtracker.com,
+adapted to Mindora's existing data instead of needing new clinical
+structure:
+
+- **Average mood by day of week** — uses your full check-in history (not
+  just the selected range, since weekday patterns benefit from more data)
+  to show which days of the week tend to run higher or lower for you.
+- **What seems to help** — compares your average mood on days you logged
+  movement vs. days you didn't, mind exercises vs. not, and (if you've
+  added any) medication-taken vs. not-taken days, within the currently
+  selected date range. Needs a handful of data points on both sides of
+  each comparison before it'll show anything — with too little data it
+  says so honestly instead of drawing a misleading line through two dots.
+
+Both panels reuse the same horizontal-bar visual language as the existing
+tag-frequency list, so nothing new to theme or maintain separately.
+
+## New: Medications & Supplements
+
+A lightweight version of moodtracker.com's "Treatment Tracking" idea, on
+the Tracker screen. You keep a personal list of medication or supplement
+names; each day you can mark one "taken" with a tap, which writes a normal
+log entry the same way movement/mind logs do (just a different category).
+That feeds directly into the "What seems to help" comparison above.
+
+Deliberately **not** modeled: dosages, schedules, refill reminders, or
+interaction warnings — none of that is something a static personal app
+should be making claims about. The disclaimer text sits right in the card
+itself: this only helps you see whether you took something on a given day,
+nothing more, and always follow your prescriber's actual instructions.
+
+## New: Daily reminder (honest about its limits)
+
+Settings → Daily reminder lets you set a time; if you haven't checked in
+by then, a dismissible banner appears on the Today screen reminding you.
+
+**This is not a push notification.** A static site with no server (and no
+service worker here) genuinely cannot notify you when the tab or browser
+is closed — there's no background process for it to run in. The banner
+only works because it's re-evaluated every time you open the Today screen
+while the time has passed, not because anything is "scheduled." If you
+want a real reminder that fires even when Mindora isn't open, your phone's
+own reminders/alarms app pointed at this page will do that more reliably
+than anything a static site can promise.
+
 ## Disclaimer (expanded)
 
 The Settings → Disclaimer card now covers more than the Learn/Well-being
@@ -340,8 +410,9 @@ mindora/
     ├── storage.js           in-memory cache + localStorage/backend persistence
     ├── recommend.js          crisis + escalation + routine recommendation engine
     ├── mood.js                check-in form, mood orb visual, tag chips
-    ├── tracker.js              movement/mind exercise logging + activity feed
-    ├── trends.js                line chart, heatmap, stats, tag frequency
+    ├── tracker.js              movement/mind/medication logging + activity feed
+    ├── charts.js                dependency-free SVG line chart + bar helper
+    ├── trends.js                  line chart, heatmap, stats, tag frequency, insights
     ├── learn.js                  mental-health psychoeducation accordion
     ├── wellbeing.js                practical well-being tips accordion
     ├── chat.js                      Anthropic API chat client + safety routing

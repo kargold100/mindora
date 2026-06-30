@@ -275,6 +275,7 @@ textarea{resize:vertical;}
 }
 .activity-icon.physical{background:rgba(232,137,107,0.18); color:var(--bloom);}
 .activity-icon.mind{background:rgba(107,111,158,0.2); color:var(--dusk);}
+.activity-icon.medication{background:rgba(124,152,133,0.2); color:var(--moss);}
 .activity-main{flex:1; min-width:0;}
 .activity-title{font-weight:600; font-size:.88rem;}
 .activity-meta{font-size:.76rem; color:var(--text-muted);}
@@ -433,6 +434,26 @@ textarea{resize:vertical;}
 }
 .admin-badge.pending{background:rgba(232,137,107,0.18); color:var(--bloom);}
 .admin-badge.approved{background:rgba(124,152,133,0.18); color:var(--moss);}
+
+/* ---------- Charts (dependency-free SVG line chart) ---------- */
+.mindora-linechart{width:100%; aspect-ratio:600/220; min-height:160px;}
+.mindora-linechart-svg{display:block; width:100%; height:100%;}
+.mindora-linechart-svg circle{transition:r .15s ease;}
+
+/* ---------- Reminder banner ---------- */
+.reminder-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  background:rgba(107,111,158,0.12); border:1px solid var(--dusk); border-radius:var(--radius-md);
+  padding:12px 14px; margin-bottom:14px; font-size:.86rem; color:var(--text);
+}
+.reminder-banner-actions{display:flex; gap:14px; flex-shrink:0;}
+.reminder-banner-actions .link-btn{font-size:.82rem;}
+
+/* ---------- Medications & Supplements ---------- */
+.medication-add-row{display:flex; gap:8px;}
+.medication-add-row input{flex:1;}
+.medication-toggle-btn{flex-shrink:0; white-space:nowrap; font-size:.78rem; padding:8px 12px;}
+.medication-toggle-btn.taken{background:rgba(124,152,133,0.18); border-color:var(--moss); color:var(--moss);}
 
 /* ---------- Modal ---------- */
 .mindora-modal-overlay{
