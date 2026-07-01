@@ -65,8 +65,22 @@ const Profiles = (function(){
     name = (name||'').trim();
     if(isRemoteMode()){
       const res = await Api.call('createProfile', { name, pin });
-      if(res && res.error) throw new Error(res.error);
+      if(res && res.error){
+        // If the name is taken AND the existing profile is pending,
+        // tell the user their profile is already awaiting approval
+        if(res.error === 'NAME_TAKEN' && res.existingStatus === 'pending'){
+          throw new Error('ALREADY_PENDING');
+        }
+        throw new Error(res.error);
+      }
       return { profileId: res.profileId, name: res.name, status: 'pending' };
+    }
+    // Local mode — same logic
+    const profiles = getLocalProfiles();
+    const existing = profiles.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if(existing){
+      if((existing.status || 'approved') === 'pending') throw new Error('ALREADY_PENDING');
+      throw new Error('NAME_TAKEN');
     }
     const res = createLocalProfile(name, pin, 'pending');
     return { profileId: res.id, name: res.name, status: 'pending' };

@@ -28,8 +28,35 @@ const Admin = (function(){
       profiles = await Profiles.listAllProfiles();
       lastRefreshed = new Date();
     }catch(e){
-      console.error('Mindora admin: listAllProfiles failed', e);
+      console.error('Mindora admin: listAllProfiles failed:', e.message);
       profiles = [];
+      // Show the real error, not just an empty list
+      if(list){
+        list.innerHTML = `
+          <div class="admin-empty-state" style="border:1px solid rgba(200,123,104,0.3);">
+            <p style="color:var(--bloom); font-weight:600; margin-bottom:6px;">⚠ Could not load profiles</p>
+            <p style="font-family:var(--font-mono); font-size:.76rem;">${e.message}</p>
+            <p style="margin-top:10px; font-size:.8rem;">If the sheet was just created, click <strong>Run setup()</strong> below, then try Refresh.</p>
+            <button id="adminRunSetupBtn" class="btn-secondary" style="margin-top:10px; width:100%;">Run setup() to initialise sheets</button>
+          </div>
+        `;
+        const setupBtn = list.querySelector('#adminRunSetupBtn');
+        if(setupBtn){
+          setupBtn.addEventListener('click', async () => {
+            setupBtn.disabled = true; setupBtn.textContent = '…';
+            try{
+              if(Profiles.isRemoteMode()){
+                await Api.call('setup', {});
+              }
+              await loadProfiles();
+              renderPendingBanner();
+              renderProfileList();
+            }catch(err){
+              setupBtn.textContent = 'Failed: ' + err.message;
+            }
+          });
+        }
+      }
     }
   }
 

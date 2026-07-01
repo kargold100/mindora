@@ -132,34 +132,54 @@
   // ── Test connection ───────────────────────────────
 
   async function handleTestConnection(){
-    const btn = document.getElementById('adminTestConnBtn');
+    const btn    = document.getElementById('adminTestConnBtn');
     const result = document.getElementById('adminConnResult');
-    const orig = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '…';
-    result.classList.add('hidden');
-    result.classList.remove('ok','fail');
+    const orig   = btn.textContent;
+    btn.disabled = true; btn.textContent = '…'; result.classList.add('hidden');
 
     if(!Profiles.isRemoteMode()){
-      result.textContent = '● Local mode — no backend configured.';
+      result.innerHTML = '<strong>● Local mode</strong> — no backend configured in config.js.<br>Edit <code>js/config.js</code> and set <code>APPS_SCRIPT_URL</code> to your Google Apps Script web app URL.';
       result.style.color = 'var(--bloom)';
       result.classList.remove('hidden');
-      btn.disabled = false;
-      btn.textContent = orig;
+      btn.disabled = false; btn.textContent = orig;
       return;
     }
 
     try{
+      // Step 1: list profiles
       const profiles = await Profiles.listAllProfiles();
-      result.textContent = I18n.t('admin_connection_ok') + ` (${profiles.length} profiles)`;
-      result.style.color = 'var(--moss)';
+      let html = `<strong style="color:var(--moss)">✓ Connected</strong> — ${profiles.length} profile(s) found.<br>`;
+
+      if(profiles.length > 0){
+        html += `Profiles: ${profiles.map(p => `<strong>${p.name}</strong> (${p.status})`).join(', ')}.`;
+      }
+
+      // Step 2: call debugSheet to show raw data
+      try{
+        const debug = await Api.call('debugSheet', {});
+        if(debug && !debug.error){
+          html += `<br><br><strong>Sheet structure:</strong> ${debug.totalRows} row(s), has status column: ${debug.hasStatusCol ? 'yes' : 'NO — run setup() again'}.<br>`;
+          if(debug.headerRow && debug.headerRow.length){
+            html += `Headers: ${debug.headerRow.join(' | ')}.`;
+          }
+          if(debug.totalRows > 1 && debug.previewRows && debug.previewRows.length > 1){
+            html += `<br>Row 2: ${debug.previewRows[1].join(' | ')}.`;
+          }
+        } else if(debug && debug.error){
+          html += `<br><strong>Sheet debug error:</strong> ${debug.error}`;
+        }
+      }catch(dbgErr){
+        html += `<br>Debug call failed: ${dbgErr.message}`;
+      }
+
+      result.innerHTML = html;
+      result.style.color = 'var(--text)';
     }catch(e){
-      result.textContent = I18n.t('admin_connection_fail') + ': ' + e.message;
+      result.innerHTML = `<strong style="color:var(--bloom)">✗ Failed:</strong> ${e.message}<br><small>Check your Apps Script URL in config.js and make sure the deployment is set to "Anyone" access.</small>`;
       result.style.color = 'var(--bloom)';
     }
     result.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = orig;
+    btn.disabled = false; btn.textContent = orig;
   }
 
   // ── Init ──────────────────────────────────────────

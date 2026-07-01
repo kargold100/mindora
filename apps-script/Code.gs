@@ -1,42 +1,47 @@
 /* ====================================================
-   MINDORA — apps-script/Code.gs
-   Backend for cross-device profiles. Deploy as a Web App and
-   paste the resulting URL into js/config.js (APPS_SCRIPT_URL).
+   MINDORA — apps-script/Code.gs  (v4)
 
-   SETUP
-   1. Create a new Google Sheet (any name).
-   2. Extensions -> Apps Script. Delete the default code, paste
-      this whole file in.
-   3. Run the `setup` function once from the editor (it creates
-      the three sheets with headers). Approve the permissions
-      prompt when asked.
-   4. Deploy -> New deployment -> type "Web app".
-        - Execute as: Me
-        - Who has access: Anyone
-   5. Copy the Web App URL into js/config.js as APPS_SCRIPT_URL.
-   6. If you ever change the code and redeploy, you MUST go to
-      Deploy -> Manage deployments -> pencil icon -> Version:
-      "New version" -> Deploy. Picking the existing version
-      silently keeps serving the OLD code — this has bitten past
-      projects (PCFB booking system), so it's called out here too.
+   SETUP (first time only)
+   1. Create a new Google Sheet.
+   2. Extensions → Apps Script. Delete default code, paste this.
+   3. Run setup() from the editor — approve permissions.
+   4. Deploy → New deployment → Web app
+        Execute as: Me  |  Who has access: Anyone
+   5. Copy the Web App URL → paste into js/config.js
 
-   SECURITY NOTE: PINs are stored as plain text in the sheet.
-   This is fine for a private family tool where the sheet itself
-   is only accessible to you, but it is NOT bank-grade security —
-   don't reuse a meaningful PIN here.
+   IMPORTANT: every time you change this file, you MUST:
+     Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy
+   Saving the script does NOT update the live deployment.
    ==================================================== */
 
 var SHEET_PROFILES = 'Profiles';
-var SHEET_MOOD = 'MoodEntries';
-var SHEET_LOGS = 'ExerciseLogs';
+var SHEET_MOOD     = 'MoodEntries';
+var SHEET_LOGS     = 'ExerciseLogs';
+
+// ── Setup ─────────────────────────────────────────────
 
 function setup(){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  if(!ss.getSheetByName(SHEET_PROFILES)){
-    var p = ss.insertSheet(SHEET_PROFILES);
+  // Profiles sheet — adds 'status' column if missing
+  var p = ss.getSheetByName(SHEET_PROFILES);
+  if(!p){
+    p = ss.insertSheet(SHEET_PROFILES);
     p.appendRow(['profileId','name','pin','settingsJson','createdAt','status']);
+  } else {
+    // Ensure status header exists in col F
+    if(!p.getRange(1,6).getValue()){
+      p.getRange(1,6).setValue('status');
+    }
+    // Back-fill status for rows that have no value in col F
+    var d = p.getDataRange().getValues();
+    for(var i=1;i<d.length;i++){
+      if(!d[i][5]){
+        p.getRange(i+1,6).setValue('approved');
+      }
+    }
   }
+
   if(!ss.getSheetByName(SHEET_MOOD)){
     var m = ss.insertSheet(SHEET_MOOD);
     m.appendRow(['profileId','date','mood','tagsJson','journal','sleepHours','stressLevel','timestamp']);
@@ -45,85 +50,124 @@ function setup(){
     var l = ss.insertSheet(SHEET_LOGS);
     l.appendRow(['profileId','id','date','category','type','duration','intensity','notes','timestamp']);
   }
+  return { ok: true, message: 'Setup complete' };
 }
 
+// ── Dispatcher ────────────────────────────────────────
+
 function doGet(e){
-  var action = e.parameter.action;
+  var action   = e.parameter.action;
   var callback = e.parameter.callback;
   var result;
 
   try{
     switch(action){
-      case 'createProfile': result = createProfile(e.parameter.name, e.parameter.pin, e.parameter.asAdmin === 'true'); break;
-      case 'login': result = login(e.parameter.name, e.parameter.pin); break;
-      case 'listProfiles': result = listProfiles(); break;
-      case 'approveProfile': result = approveProfile(e.parameter.profileId); break;
+      case 'setup':          result = setup(); break;
+      case 'createProfile':  result = createProfile(e.parameter.name, e.parameter.pin, e.parameter.asAdmin === 'true'); break;
+      case 'login':          result = login(e.parameter.name, e.parameter.pin); break;
+      case 'listProfiles':   result = listProfiles(); break;
+      case 'approveProfile': result = setProfileStatus(e.parameter.profileId, 'approved'); break;
       case 'lockProfile':    result = setProfileStatus(e.parameter.profileId, 'locked'); break;
       case 'unlockProfile':  result = setProfileStatus(e.parameter.profileId, 'approved'); break;
       case 'resetPin':       result = resetPin(e.parameter.profileId, e.parameter.newPin); break;
       case 'deleteProfile':  result = deleteProfile(e.parameter.profileId); break;
-      case 'getData': result = getData(e.parameter.profileId); break;
-      case 'saveMood': result = saveMood(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
-      case 'saveLog': result = saveLog(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
-      case 'deleteLog': result = deleteLogRow(e.parameter.profileId, e.parameter.logId); break;
-      case 'saveSettings': result = saveSettings(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
-      case 'clearData': result = clearData(e.parameter.profileId); break;
-      default: result = { error: 'UNKNOWN_ACTION' };
+      case 'getData':        result = getData(e.parameter.profileId); break;
+      case 'saveMood':       result = saveMood(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
+      case 'saveLog':        result = saveLog(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
+      case 'deleteLog':      result = deleteLogRow(e.parameter.profileId, e.parameter.logId); break;
+      case 'saveSettings':   result = saveSettings(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
+      case 'clearData':      result = clearData(e.parameter.profileId); break;
+      case 'debugSheet':     result = debugSheet(); break;
+      default: result = { error: 'UNKNOWN_ACTION: ' + action };
     }
   }catch(err){
-    result = { error: String(err) };
+    result = { error: 'SERVER_ERROR: ' + String(err) };
   }
 
-  var body = callback ? (callback + '(' + JSON.stringify(result) + ')') : JSON.stringify(result);
+  var body = callback
+    ? (callback + '(' + JSON.stringify(result) + ')')
+    : JSON.stringify(result);
+
   return ContentService.createTextOutput(body)
     .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 
-// ---------- Helpers ----------
+// ── Helpers ───────────────────────────────────────────
+
+function getProfileSheet(){
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
+  if(!sheet){
+    throw new Error('Profiles sheet not found. Please run setup() from the Apps Script editor first.');
+  }
+  return sheet;
+}
 
 function defaultSettings(name, language){
   return {
     name: name || '',
     theme: 'dark',
-    language: language || 'en',
-    gamification: { xp: 0, checkinStreak: 0, lastCheckinDate: null, moveStreak: 0, lastMoveDate: null, mindStreak: 0, lastMindDate: null }
+    language: language || 'en'
   };
 }
 
+// Read a row from the Profiles sheet by name (case-insensitive)
 function findProfileRow(name){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
     if(String(data[i][1]).toLowerCase() === String(name).toLowerCase()){
-      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3], status: data[i][5] || 'approved' };
+      return rowToProfile(data[i], i+1);
     }
   }
   return null;
 }
 
+// Read a row by profileId
 function findProfileById(profileId){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
     if(String(data[i][0]) === String(profileId)){
-      return { rowIndex: i+1, profileId: data[i][0], name: data[i][1], pin: data[i][2], settingsJson: data[i][3], status: data[i][5] || 'approved' };
+      return rowToProfile(data[i], i+1);
     }
   }
   return null;
 }
 
-// ---------- Profile actions ----------
+// Convert a raw sheet row to a safe profile object
+// Handles missing status column (older sheets)
+function rowToProfile(row, rowIndex){
+  var status = row.length > 5 ? String(row[5] || '') : '';
+  // Handle GAS date-formatting of empty cells → they become '' or 0
+  if(!status || status === '0' || status === 'NaN') status = 'approved';
+  return {
+    rowIndex:    rowIndex,
+    profileId:   String(row[0] || ''),
+    name:        String(row[1] || ''),
+    pin:         String(row[2] || ''),
+    settingsJson: String(row[3] || '{}'),
+    status:      status
+  };
+}
+
+// ── Profile actions ───────────────────────────────────
 
 function createProfile(name, pin, asAdmin){
   name = (name || '').trim();
-  if(!name) return { error: 'NAME_REQUIRED' };
+  if(!name)              return { error: 'NAME_REQUIRED' };
   if(!pin || String(pin).length < 4) return { error: 'PIN_TOO_SHORT' };
-  if(findProfileRow(name)) return { error: 'NAME_TAKEN' };
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
+  var existing = findProfileRow(name);
+  if(existing){
+    // Tell the client the status of the existing profile
+    // so it can give a more helpful message
+    return { error: 'NAME_TAKEN', existingStatus: existing.status };
+  }
+
+  var sheet     = getProfileSheet();
   var profileId = Utilities.getUuid();
-  var settings = defaultSettings(name, 'en');
-  var status = asAdmin ? 'approved' : 'pending';
+  var settings  = defaultSettings(name, 'en');
+  var status    = asAdmin ? 'approved' : 'pending';
   sheet.appendRow([profileId, name, String(pin), JSON.stringify(settings), new Date().toISOString(), status]);
   return { profileId: profileId, name: name, status: status };
 }
@@ -131,42 +175,38 @@ function createProfile(name, pin, asAdmin){
 function login(name, pin){
   var match = findProfileRow(name);
   if(!match || String(match.pin) !== String(pin)) return { error: 'INVALID' };
-  if(match.status !== 'approved'){
-    if(match.status === 'locked') return { error: 'LOCKED' };
-    return { error: 'PENDING_APPROVAL' };
-  }
+  if(match.status === 'locked')          return { error: 'LOCKED' };
+  if(match.status !== 'approved')        return { error: 'PENDING_APPROVAL' };
   return { profileId: match.profileId, name: match.name };
 }
 
-// Admin: list profile names + status only — PINs are intentionally never returned.
+// ── Admin: profile management ─────────────────────────
+
 function listProfiles(){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
   var profiles = [];
-  for(var i=1;i<data.length;i++){
-    profiles.push({ profileId: data[i][0], name: data[i][1], status: data[i][5] || 'approved' });
+
+  for(var i=1; i<data.length; i++){
+    var row = data[i];
+    // Skip blank rows
+    if(!row[0] && !row[1]) continue;
+    var p = rowToProfile(row, i+1);
+    // Only return fields needed by the admin — never return the PIN
+    profiles.push({
+      profileId: p.profileId,
+      name:      p.name,
+      status:    p.status
+    });
   }
+
   return { profiles: profiles };
 }
 
-// Admin: flips a pending profile to approved so it can log in.
-function approveProfile(profileId){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
-    if(String(data[i][0]) === String(profileId)){
-      sheet.getRange(i+1, 6).setValue('approved');
-      return { ok: true };
-    }
-  }
-  return { error: 'PROFILE_NOT_FOUND' };
-}
-
-// Admin: set a profile's status (approved / locked)
 function setProfileStatus(profileId, status){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
     if(String(data[i][0]) === String(profileId)){
       sheet.getRange(i+1, 6).setValue(status);
       return { ok: true };
@@ -175,12 +215,11 @@ function setProfileStatus(profileId, status){
   return { error: 'PROFILE_NOT_FOUND' };
 }
 
-// Admin: replace a profile's PIN
 function resetPin(profileId, newPin){
   if(!newPin || String(newPin).length < 4) return { error: 'PIN_TOO_SHORT' };
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
     if(String(data[i][0]) === String(profileId)){
       sheet.getRange(i+1, 3).setValue(String(newPin));
       return { ok: true };
@@ -189,12 +228,10 @@ function resetPin(profileId, newPin){
   return { error: 'PROFILE_NOT_FOUND' };
 }
 
-// Admin: removes a profile row plus all of their mood entries and exercise
-// logs (cascade delete) — irreversible, same as the in-app confirm warns.
 function deleteProfile(profileId){
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
     if(String(data[i][0]) === String(profileId)){
       sheet.deleteRow(i+1);
       break;
@@ -202,159 +239,160 @@ function deleteProfile(profileId){
   }
   [SHEET_MOOD, SHEET_LOGS].forEach(function(name){
     var s = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+    if(!s) return;
     var d = s.getDataRange().getValues();
-    for(var j=d.length-1;j>=1;j--){
-      if(String(d[j][0]) === String(profileId)){
-        s.deleteRow(j+1);
-      }
+    for(var j=d.length-1; j>=1; j--){
+      if(String(d[j][0]) === String(profileId)) s.deleteRow(j+1);
     }
   });
   return { ok: true };
 }
 
+// ── Debug: returns raw sheet info without PINs ────────
+// Use the Test Connection button in admin.html to call this.
+function debugSheet(){
+  try{
+    var sheet = getProfileSheet();
+    var data  = sheet.getDataRange().getValues();
+    var rows  = [];
+    for(var i=0; i<Math.min(data.length, 10); i++){
+      var row = data[i].slice(); // copy
+      if(i > 0) row[2] = '***'; // hide PIN
+      rows.push(row.map(String));
+    }
+    return {
+      sheetName:     SHEET_PROFILES,
+      totalRows:     data.length,
+      headerRow:     data[0] ? data[0].map(String) : [],
+      previewRows:   rows,
+      hasStatusCol:  data[0] ? data[0].length >= 6 : false
+    };
+  }catch(err){
+    return { error: String(err) };
+  }
+}
+
+// ── Data storage ──────────────────────────────────────
+
 function getData(profileId){
-  var profile = findProfileById(profileId);
-  if(!profile) return { error: 'PROFILE_NOT_FOUND' };
-  var settings;
-  try{ settings = JSON.parse(profile.settingsJson); }catch(e){ settings = defaultSettings(profile.name, 'en'); }
+  var match = findProfileById(profileId);
+  if(!match) return { error: 'PROFILE_NOT_FOUND' };
 
-  var moodEntries = [];
-  var moodSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MOOD);
-  var moodData = moodSheet.getDataRange().getValues();
-  for(var i=1;i<moodData.length;i++){
-    if(String(moodData[i][0]) === String(profileId)){
+  var settings = {};
+  try{ settings = JSON.parse(match.settingsJson); }catch(e){}
+
+  var mood = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MOOD);
+  var logs = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOGS);
+
+  var moodEntries   = [];
+  var exerciseLogs  = [];
+
+  if(mood){
+    var md = mood.getDataRange().getValues();
+    for(var i=1; i<md.length; i++){
+      if(String(md[i][0]) !== String(profileId)) continue;
+      var tags = [];
+      try{ tags = JSON.parse(md[i][3]); }catch(e){}
       moodEntries.push({
-        date: moodData[i][1],
-        mood: moodData[i][2],
-        tags: safeParseArray(moodData[i][3]),
-        journal: moodData[i][4],
-        sleepHours: moodData[i][5] === '' ? null : moodData[i][5],
-        stressLevel: moodData[i][6],
-        timestamp: moodData[i][7]
+        date: String(md[i][1]), mood: Number(md[i][2] || 0),
+        tags: tags, journal: String(md[i][4] || ''),
+        sleepHours: md[i][5] !== '' ? Number(md[i][5]) : null,
+        stressLevel: md[i][6] !== '' ? Number(md[i][6]) : null,
+        timestamp: Number(md[i][7] || 0)
       });
     }
   }
 
-  var exerciseLogs = [];
-  var logSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOGS);
-  var logData = logSheet.getDataRange().getValues();
-  for(var j=1;j<logData.length;j++){
-    if(String(logData[j][0]) === String(profileId)){
+  if(logs){
+    var ld = logs.getDataRange().getValues();
+    for(var i=1; i<ld.length; i++){
+      if(String(ld[i][0]) !== String(profileId)) continue;
       exerciseLogs.push({
-        id: logData[j][1],
-        date: logData[j][2],
-        category: logData[j][3],
-        type: logData[j][4],
-        duration: logData[j][5],
-        intensity: logData[j][6] === '' ? null : logData[j][6],
-        notes: logData[j][7],
-        timestamp: logData[j][8]
+        profileId: String(ld[i][0]), id: String(ld[i][1]),
+        date: String(ld[i][2]), category: String(ld[i][3]),
+        type: String(ld[i][4]), duration: Number(ld[i][5] || 0),
+        intensity: ld[i][6] !== '' ? Number(ld[i][6]) : null,
+        notes: String(ld[i][7] || ''), timestamp: Number(ld[i][8] || 0)
       });
     }
   }
 
-  return {
-    moodEntries: moodEntries,
-    exerciseLogs: exerciseLogs,
-    settings: settings,
-    gamification: settings.gamification || defaultSettings().gamification
-  };
+  return { settings: settings, moodEntries: moodEntries, exerciseLogs: exerciseLogs };
 }
-
-function safeParseArray(str){
-  try{ var v = JSON.parse(str); return Array.isArray(v) ? v : []; }catch(e){ return []; }
-}
-
-// ---------- Mood ----------
 
 function saveMood(profileId, entry){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MOOD);
+  if(!sheet) return { error: 'MOOD_SHEET_NOT_FOUND' };
+
+  // Remove existing entry for same date
   var data = sheet.getDataRange().getValues();
-  var rowIndex = -1;
-  for(var i=1;i<data.length;i++){
-    if(String(data[i][0]) === String(profileId) && data[i][1] === entry.date){
-      rowIndex = i+1;
-      break;
+  for(var i=data.length-1; i>=1; i--){
+    if(String(data[i][0]) === String(profileId) && String(data[i][1]) === String(entry.date)){
+      sheet.deleteRow(i+1);
     }
   }
-  var row = [profileId, entry.date, entry.mood, JSON.stringify(entry.tags||[]), entry.journal||'', entry.sleepHours===null?'':entry.sleepHours, entry.stressLevel, entry.timestamp||Date.now()];
-  if(rowIndex === -1){
-    sheet.appendRow(row);
-  } else {
-    sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
-  }
-  return { ok: true, record: entry };
-}
 
-// ---------- Exercise logs ----------
+  sheet.appendRow([
+    profileId, entry.date, entry.mood,
+    JSON.stringify(entry.tags || []),
+    entry.journal || '',
+    entry.sleepHours !== null ? entry.sleepHours : '',
+    entry.stressLevel !== null ? entry.stressLevel : '',
+    Date.now()
+  ]);
+  return { ok: true };
+}
 
 function saveLog(profileId, log){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOGS);
-  var id = Utilities.getUuid();
-  var timestamp = Date.now();
-  var record = {
-    id: id,
-    date: log.date,
-    category: log.category,
-    type: log.type,
-    duration: log.duration,
-    intensity: log.intensity,
-    notes: log.notes || '',
-    timestamp: timestamp
-  };
-  sheet.appendRow([profileId, id, record.date, record.category, record.type, record.duration, record.intensity===null?'':record.intensity, record.notes, timestamp]);
-  return { ok: true, record: record };
+  if(!sheet) return { error: 'LOGS_SHEET_NOT_FOUND' };
+  var id = log.id || ('log_' + Date.now());
+  sheet.appendRow([
+    profileId, id, log.date, log.category, log.type,
+    log.duration || 0,
+    log.intensity !== null ? log.intensity : '',
+    log.notes || '',
+    Date.now()
+  ]);
+  return { ok: true, id: id };
 }
 
 function deleteLogRow(profileId, logId){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOGS);
+  if(!sheet) return { ok: true };
   var data = sheet.getDataRange().getValues();
-  for(var i=1;i<data.length;i++){
+  for(var i=data.length-1; i>=1; i--){
     if(String(data[i][0]) === String(profileId) && String(data[i][1]) === String(logId)){
       sheet.deleteRow(i+1);
       return { ok: true };
     }
   }
-  return { ok: false };
+  return { ok: true };
 }
 
-// ---------- Settings (also receives gamification updates) ----------
-
-function saveSettings(profileId, partial){
-  var profile = findProfileById(profileId);
-  if(!profile) return { error: 'PROFILE_NOT_FOUND' };
-  var settings;
-  try{ settings = JSON.parse(profile.settingsJson); }catch(e){ settings = defaultSettings(profile.name, 'en'); }
-
-  Object.keys(partial).forEach(function(key){
-    settings[key] = partial[key];
-  });
-
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-  sheet.getRange(profile.rowIndex, 4).setValue(JSON.stringify(settings));
-  return { ok: true, settings: settings };
+function saveSettings(profileId, newSettings){
+  var sheet = getProfileSheet();
+  var data  = sheet.getDataRange().getValues();
+  for(var i=1; i<data.length; i++){
+    if(String(data[i][0]) === String(profileId)){
+      var existing = {};
+      try{ existing = JSON.parse(data[i][3]); }catch(e){}
+      var merged = Object.assign({}, existing, newSettings);
+      sheet.getRange(i+1, 4).setValue(JSON.stringify(merged));
+      return { ok: true };
+    }
+  }
+  return { error: 'PROFILE_NOT_FOUND' };
 }
-
-// ---------- Clear data (keeps the profile + PIN, wipes entries/logs) ----------
 
 function clearData(profileId){
   [SHEET_MOOD, SHEET_LOGS].forEach(function(name){
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
-    var data = sheet.getDataRange().getValues();
-    for(var i=data.length-1;i>=1;i--){
-      if(String(data[i][0]) === String(profileId)){
-        sheet.deleteRow(i+1);
-      }
+    var s = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+    if(!s) return;
+    var d = s.getDataRange().getValues();
+    for(var i=d.length-1; i>=1; i--){
+      if(String(d[i][0]) === String(profileId)) s.deleteRow(i+1);
     }
   });
-
-  var profile = findProfileById(profileId);
-  if(profile){
-    var settings;
-    try{ settings = JSON.parse(profile.settingsJson); }catch(e){ settings = defaultSettings(profile.name, 'en'); }
-    settings.gamification = defaultSettings().gamification;
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
-    sheet.getRange(profile.rowIndex, 4).setValue(JSON.stringify(settings));
-  }
   return { ok: true };
 }
