@@ -1,10 +1,13 @@
 /* ====================================================
-   MINDORA — modal.js
-   A small reusable modal, used for:
-   1. The one-time first-launch disclaimer acknowledgment
-   2. Replacing native browser confirm() dialogs (clear data,
-      remove profile) with something that matches the rest of
-      the design instead of a jarring system popup
+   MINDORA — modal.js  (v2)
+   Reusable modal for:
+     • confirm/cancel dialogs (replaces native confirm())
+     • First-launch onboarding acknowledgment
+     • Input-capture dialogs (e.g. admin reset PIN)
+   Returns a Promise that resolves to:
+     • false if cancelled / dismissed
+     • true if confirmed (no input)
+     • { inputValue: string } if an input field is present
    ==================================================== */
 
 const Modal = (function(){
@@ -21,59 +24,94 @@ const Modal = (function(){
     const checkboxHtml = opts.checkboxLabel ? `
       <label class="modal-checkbox-row">
         <input type="checkbox" id="mindoraModalCheckbox">
-        <span>${opts.checkboxLabel}</span>
+        <span>${escHtml(opts.checkboxLabel)}</span>
       </label>` : '';
 
+    const inputHtml = opts.inputPlaceholder !== undefined ? `
+      <input type="${opts.inputType||'text'}"
+             id="mindoraModalInput"
+             placeholder="${escHtml(opts.inputPlaceholder||'')}"
+             autocomplete="off"
+             style="margin-top:12px; width:100%;">` : '';
+
     overlay.innerHTML = `
-      <div class="mindora-modal-card" role="dialog" aria-modal="true" aria-label="${escapeHtml(opts.title || '')}">
-        <h3>${escapeHtml(opts.title || '')}</h3>
-        <p class="muted">${escapeHtml(opts.body || '')}</p>
+      <div class="mindora-modal-card" role="dialog" aria-modal="true">
+        <h3>${escHtml(opts.title||'')}</h3>
+        <p class="muted">${escHtml(opts.body||'')}</p>
         ${checkboxHtml}
+        ${inputHtml}
         <div class="modal-actions">
-          ${opts.cancelText ? `<button id="mindoraModalCancel" class="btn-ghost">${escapeHtml(opts.cancelText)}</button>` : ''}
-          <button id="mindoraModalConfirm" class="${opts.danger ? 'btn-danger' : 'btn-primary'}" ${opts.checkboxLabel ? 'disabled' : ''}>${escapeHtml(opts.confirmText || '')}</button>
+          ${opts.cancelText ? `<button id="mindoraModalCancel" class="btn-ghost">${escHtml(opts.cancelText)}</button>` : ''}
+          <button id="mindoraModalConfirm"
+                  class="${opts.danger ? 'btn-danger' : 'btn-primary'}"
+                  ${(opts.checkboxLabel || opts.inputPlaceholder !== undefined) ? 'disabled' : ''}>
+            ${escHtml(opts.confirmText||'OK')}
+          </button>
         </div>
       </div>
     `;
 
     requestAnimationFrame(() => overlay.classList.add('visible'));
+
+    const confirmBtn = overlay.querySelector('#mindoraModalConfirm');
+
+    if(opts.checkboxLabel){
+      const cb = overlay.querySelector('#mindoraModalCheckbox');
+      cb.addEventListener('change', () => { confirmBtn.disabled = !cb.checked; });
+    }
+
+    if(opts.inputPlaceholder !== undefined){
+      const input = overlay.querySelector('#mindoraModalInput');
+      input.addEventListener('input', () => {
+        confirmBtn.disabled = input.value.trim().length < (opts.inputMinLength || 1);
+      });
+      // Also handle Enter key in the input
+      input.addEventListener('keydown', e => {
+        if(e.key === 'Enter' && !confirmBtn.disabled) confirmBtn.click();
+      });
+      // Focus the input after animation
+      setTimeout(() => { try{ input.focus(); }catch(e){} }, 120);
+    }
+
     return overlay;
   }
 
   function hide(){
     const overlay = document.getElementById('mindoraModalOverlay');
-    if(overlay) overlay.classList.remove('visible');
+    if(overlay){
+      overlay.classList.remove('visible');
+    }
   }
 
-  function escapeHtml(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  function escHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
   }
 
-  // Returns a Promise<boolean> — true if confirmed, false if cancelled.
-  // Omit cancelText for a single-button dialog (e.g. an acknowledgment
-  // that must be confirmed to proceed, with no way to decline).
   function confirmDialog(opts){
     return new Promise(resolve => {
       const overlay = render(opts);
 
-      if(opts.checkboxLabel){
-        const cb = overlay.querySelector('#mindoraModalCheckbox');
-        const confirmBtn = overlay.querySelector('#mindoraModalConfirm');
-        cb.addEventListener('change', () => { confirmBtn.disabled = !cb.checked; });
-      }
-
       overlay.querySelector('#mindoraModalConfirm').addEventListener('click', () => {
+        const inputEl = overlay.querySelector('#mindoraModalInput');
         hide();
-        resolve(true);
+        if(inputEl){
+          resolve({ inputValue: inputEl.value });
+        } else {
+          resolve(true);
+        }
       });
 
       const cancelBtn = overlay.querySelector('#mindoraModalCancel');
       if(cancelBtn){
-        cancelBtn.addEventListener('click', () => {
-          hide();
-          resolve(false);
+        cancelBtn.addEventListener('click', () => { hide(); resolve(false); });
+      }
+
+      // Close on backdrop click (only when a cancel exists)
+      if(opts.cancelText){
+        overlay.addEventListener('click', e => {
+          if(e.target === overlay){ hide(); resolve(false); }
         });
       }
     });

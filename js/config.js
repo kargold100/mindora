@@ -77,6 +77,6 @@
    it does and doesn't protect.
    ==================================================== */
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUOvIINQAjkH-u1x189A6Ec2rNXi5SrVBJRqWBdNTFPZiqQVh7EA546kEV1jPaNLSR5A/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx6_5urCODBFPlHHqUaV-bfdcBR8CuIGrbOOK5weT9YTaZUMbBveODclw7Ck1gJpQBG/exec';
 // Example once set up:
 // const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycb.../exec';

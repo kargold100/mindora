@@ -1,146 +1,120 @@
 /* ====================================================
-   MINDORA — profiles.js
-   Multiple people can use Mindora. New profiles created through
-   the normal app start as "pending" and can't log in until the
-   separate admin page approves them. Profiles added directly by
-   the admin are auto-approved, since the admin is vouching for
-   them. In LOCAL mode each profile is a separate localStorage
-   bucket on this device. In REMOTE mode (APPS_SCRIPT_URL
-   configured) the same name + PIN logs you into the same profile
-   from any browser or device.
+   MINDORA — profiles.js  (v3)
+   Profiles with status: pending | approved | locked
+   ──────────────────────────────────────────────────
+   LOCAL MODE  — all data in localStorage['mindora_profiles_local']
+     ● Only visible in the same browser+origin that created them
+     ● Admin approval via admin.html on the SAME device
+   REMOTE MODE — data in Google Sheets via Apps Script
+     ● Works across any device once Apps Script URL is set
    ==================================================== */
 
 const Profiles = (function(){
 
-  const SESSION_KEY = 'mindora_session';
-  const LOCAL_PROFILES_KEY = 'mindora_profiles_local';
+  const SESSION_KEY     = 'mindora_session';
+  const LOCAL_PROFILES  = 'mindora_profiles_local';
 
-  function isRemoteMode(){
-    return Api.isConfigured();
-  }
+  function isRemoteMode(){ return Api.isConfigured(); }
 
+  // Simple non-cryptographic hash — good enough to avoid plaintext PINs
+  // in localStorage; not security-grade.
   function simpleHash(str){
     let h = 0;
-    for(let i=0;i<str.length;i++){
-      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    }
+    for(let i=0;i<str.length;i++){ h = (Math.imul(31,h) + str.charCodeAt(i)) | 0; }
     return String(h);
   }
 
-  function getSession(){
-    return Storage._read(SESSION_KEY, null);
-  }
+  // ── Session ───────────────────────────────────────
 
-  function setSession(session){
-    Storage._write(SESSION_KEY, session);
-  }
+  function getSession(){ return Storage._read(SESSION_KEY, null); }
+  function setSession(s){ Storage._write(SESSION_KEY, s); }
+  function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
 
-  function clearSession(){
-    try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
-  }
+  // ── Local helpers ─────────────────────────────────
 
-  // ---------- Local mode ----------
-
-  function getLocalProfiles(){
-    return Storage._read(LOCAL_PROFILES_KEY, []);
-  }
+  function getLocalProfiles(){ return Storage._read(LOCAL_PROFILES, []); }
+  function setLocalProfiles(list){ Storage._write(LOCAL_PROFILES, list); }
 
   function createLocalProfile(name, pin, status){
-    status = status || 'pending';
     const profiles = getLocalProfiles();
-    if(profiles.some(p => p.name.toLowerCase() === name.toLowerCase())){
-      throw new Error('NAME_TAKEN');
-    }
+    if(profiles.some(p => p.name.toLowerCase() === name.toLowerCase())) throw new Error('NAME_TAKEN');
     const id = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    profiles.push({ id, name, pinHash: simpleHash(pin), status });
-    Storage._write(LOCAL_PROFILES_KEY, profiles);
+    profiles.push({ id, name, pinHash: simpleHash(pin), status: status || 'pending' });
+    setLocalProfiles(profiles);
     Storage._write('mindora_data_' + id, {
-      moodEntries: [], exerciseLogs: [],
-      settings: { name, theme: 'dark', language: I18n.getLang() },
-      gamification: { xp: 0, checkinStreak: 0, lastCheckinDate: null, moveStreak: 0, lastMoveDate: null, mindStreak: 0, lastMindDate: null }
+      moodEntries:[], exerciseLogs:[],
+      settings:{ name, theme:'dark', language: I18n.getLang() },
+      gamification:{ xp:0, checkinStreak:0, lastCheckinDate:null, moveStreak:0, lastMoveDate:null, mindStreak:0, lastMindDate:null }
     });
-    return { id, name, status };
+    return { id, name, status: status || 'pending' };
   }
 
   function loginLocalProfile(name, pin){
     const profiles = getLocalProfiles();
     const match = profiles.find(p => p.name.toLowerCase() === name.toLowerCase());
-    if(!match || match.pinHash !== simpleHash(pin)){
-      throw new Error('INVALID');
-    }
-    if((match.status || 'approved') !== 'approved'){
-      throw new Error('PENDING_APPROVAL');
-    }
+    if(!match || match.pinHash !== simpleHash(pin)) throw new Error('INVALID');
+    const s = match.status || 'approved';
+    if(s === 'pending')  throw new Error('PENDING_APPROVAL');
+    if(s === 'locked')   throw new Error('LOCKED');
     return { id: match.id, name: match.name };
   }
 
-  // ---------- Public actions ----------
+  // ── Public: app-side actions ──────────────────────
 
-  // Used by the main app's "Create profile" screen. Always starts pending —
-  // it cannot log itself in, regardless of mode.
   async function selfRegister(name, pin){
-    name = (name || '').trim();
+    name = (name||'').trim();
     if(isRemoteMode()){
       const res = await Api.call('createProfile', { name, pin });
       if(res && res.error) throw new Error(res.error);
       return { profileId: res.profileId, name: res.name, status: 'pending' };
-    } else {
-      const res = createLocalProfile(name, pin, 'pending');
-      return { profileId: res.id, name: res.name, status: 'pending' };
     }
+    const res = createLocalProfile(name, pin, 'pending');
+    return { profileId: res.id, name: res.name, status: 'pending' };
   }
 
   async function login(name, pin){
-    name = (name || '').trim();
+    name = (name||'').trim();
     if(isRemoteMode()){
       const res = await Api.call('login', { name, pin });
       if(res && res.error) throw new Error(res.error);
       setSession({ id: res.profileId, name: res.name, mode: 'remote' });
       await Storage.hydrateFromRemote(res.profileId);
       return res;
-    } else {
-      const res = loginLocalProfile(name, pin); // throws PENDING_APPROVAL or INVALID
-      setSession({ id: res.id, name: res.name, mode: 'local' });
-      Storage.hydrateFromLocal(res.id);
-      return res;
     }
+    const res = loginLocalProfile(name, pin);
+    setSession({ id: res.id, name: res.name, mode: 'local' });
+    Storage.hydrateFromLocal(res.id);
+    return res;
   }
 
   async function resumeSession(){
     const session = getSession();
     if(!session) return null;
     try{
-      if(session.mode === 'remote'){
-        await Storage.hydrateFromRemote(session.id);
-      } else {
-        Storage.hydrateFromLocal(session.id);
-      }
+      if(session.mode === 'remote') await Storage.hydrateFromRemote(session.id);
+      else Storage.hydrateFromLocal(session.id);
       return session;
     }catch(e){
-      console.error('Mindora: could not resume session', e);
+      console.error('Mindora: session resume failed', e);
       clearSession();
       return null;
     }
   }
 
-  function logout(){
-    clearSession();
-    Storage.resetCache();
-  }
+  function logout(){ clearSession(); Storage.resetCache(); }
 
-  // ---------- Admin: manage profiles without ever exposing PINs ----------
-  // (The admin page that calls these has its own separate credential gate —
-  // see admin.html / js/admin-login.js. These functions themselves don't
-  // check who's calling; the gate happens before this module is ever used.)
+  // ── Admin actions ─────────────────────────────────
 
   async function listAllProfiles(){
     if(isRemoteMode()){
       const res = await Api.call('listProfiles', {});
       if(res && res.error) throw new Error(res.error);
       return res.profiles || [];
-    } else {
-      return getLocalProfiles().map(p => ({ profileId: p.id, name: p.name, status: p.status || 'approved' }));
     }
+    return getLocalProfiles().map(p => ({
+      profileId: p.id, name: p.name,
+      status: p.status || 'approved'
+    }));
   }
 
   async function approveProfile(profileId){
@@ -148,12 +122,44 @@ const Profiles = (function(){
       const res = await Api.call('approveProfile', { profileId });
       if(res && res.error) throw new Error(res.error);
     } else {
-      const profiles = getLocalProfiles();
-      const idx = profiles.findIndex(p => p.id === profileId);
-      if(idx !== -1){
-        profiles[idx].status = 'approved';
-        Storage._write(LOCAL_PROFILES_KEY, profiles);
-      }
+      const list = getLocalProfiles();
+      const idx = list.findIndex(p => p.id === profileId);
+      if(idx !== -1){ list[idx].status = 'approved'; setLocalProfiles(list); }
+    }
+  }
+
+  async function lockProfile(profileId){
+    if(isRemoteMode()){
+      const res = await Api.call('lockProfile', { profileId });
+      if(res && res.error) throw new Error(res.error);
+    } else {
+      const list = getLocalProfiles();
+      const idx = list.findIndex(p => p.id === profileId);
+      if(idx !== -1){ list[idx].status = 'locked'; setLocalProfiles(list); }
+    }
+  }
+
+  async function unlockProfile(profileId){
+    if(isRemoteMode()){
+      const res = await Api.call('unlockProfile', { profileId });
+      if(res && res.error) throw new Error(res.error);
+    } else {
+      const list = getLocalProfiles();
+      const idx = list.findIndex(p => p.id === profileId);
+      if(idx !== -1){ list[idx].status = 'approved'; setLocalProfiles(list); }
+    }
+  }
+
+  async function resetProfilePin(profileId, newPin){
+    if(newPin.length < 4) throw new Error('PIN_TOO_SHORT');
+    if(isRemoteMode()){
+      const res = await Api.call('resetPin', { profileId, newPin });
+      if(res && res.error) throw new Error(res.error);
+    } else {
+      const list = getLocalProfiles();
+      const idx = list.findIndex(p => p.id === profileId);
+      if(idx !== -1){ list[idx].pinHash = simpleHash(newPin); setLocalProfiles(list); }
+      else throw new Error('PROFILE_NOT_FOUND');
     }
   }
 
@@ -162,32 +168,47 @@ const Profiles = (function(){
       const res = await Api.call('deleteProfile', { profileId });
       if(res && res.error) throw new Error(res.error);
     } else {
-      const profiles = getLocalProfiles().filter(p => p.id !== profileId);
-      Storage._write(LOCAL_PROFILES_KEY, profiles);
+      setLocalProfiles(getLocalProfiles().filter(p => p.id !== profileId));
       try{ localStorage.removeItem('mindora_data_' + profileId); }catch(e){}
     }
     const session = getSession();
-    if(session && session.id === profileId){
-      logout();
-    }
+    if(session && session.id === profileId) logout();
   }
 
-  // Creates a profile without switching the current session to it, and
-  // auto-approves it since the admin is vouching for it directly — used by
-  // the admin page to add a profile on someone else's behalf.
+  // Creates and auto-approves — used by admin adding someone else
   async function createProfileSilently(name, pin){
-    name = (name || '').trim();
+    name = (name||'').trim();
     if(isRemoteMode()){
-      const res = await Api.call('createProfile', { name, pin, asAdmin: 'true' });
+      const res = await Api.call('createProfile', { name, pin, asAdmin:'true' });
       if(res && res.error) throw new Error(res.error);
       return res;
-    } else {
-      return createLocalProfile(name, pin, 'approved');
     }
+    return createLocalProfile(name, pin, 'approved');
+  }
+
+  // ── Local-mode diagnostic (admin use only) ────────
+  // Returns a plain summary of what's in localStorage so the admin
+  // can see if there's anything at all, even in an empty-profiles scenario.
+  function localDiagnostic(){
+    if(isRemoteMode()) return null;
+    const profiles = getLocalProfiles();
+    const keys = [];
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith('mindora_')) keys.push(k);
+      }
+    }catch(e){}
+    return {
+      profileCount: profiles.length,
+      profiles: profiles.map(p => ({ name:p.name, status:p.status||'approved' })),
+      mindoraKeys: keys
+    };
   }
 
   return {
     isRemoteMode, selfRegister, login, resumeSession, logout, getSession,
-    listAllProfiles, approveProfile, removeProfile, createProfileSilently
+    listAllProfiles, approveProfile, lockProfile, unlockProfile, resetProfilePin,
+    removeProfile, createProfileSilently, localDiagnostic
   };
 })();

@@ -340,9 +340,10 @@
       }
     }catch(e){
       const msg = e.message;
-      if(msg === 'NAME_TAKEN') showProfileError('profile_error_taken');
+      if(msg === 'NAME_TAKEN')          showProfileError('profile_error_taken');
       else if(msg === 'PENDING_APPROVAL') showProfileError('profile_pending_login');
-      else showProfileError('profile_error_notfound');
+      else if(msg === 'LOCKED')           showProfileError('profile_error_locked');
+      else                                showProfileError('profile_error_notfound');
     }finally{
       btn.disabled = false;
       btn.textContent = originalText;

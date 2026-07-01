@@ -58,7 +58,10 @@ function doGet(e){
       case 'login': result = login(e.parameter.name, e.parameter.pin); break;
       case 'listProfiles': result = listProfiles(); break;
       case 'approveProfile': result = approveProfile(e.parameter.profileId); break;
-      case 'deleteProfile': result = deleteProfile(e.parameter.profileId); break;
+      case 'lockProfile':    result = setProfileStatus(e.parameter.profileId, 'locked'); break;
+      case 'unlockProfile':  result = setProfileStatus(e.parameter.profileId, 'approved'); break;
+      case 'resetPin':       result = resetPin(e.parameter.profileId, e.parameter.newPin); break;
+      case 'deleteProfile':  result = deleteProfile(e.parameter.profileId); break;
       case 'getData': result = getData(e.parameter.profileId); break;
       case 'saveMood': result = saveMood(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
       case 'saveLog': result = saveLog(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
@@ -128,7 +131,10 @@ function createProfile(name, pin, asAdmin){
 function login(name, pin){
   var match = findProfileRow(name);
   if(!match || String(match.pin) !== String(pin)) return { error: 'INVALID' };
-  if(match.status !== 'approved') return { error: 'PENDING_APPROVAL' };
+  if(match.status !== 'approved'){
+    if(match.status === 'locked') return { error: 'LOCKED' };
+    return { error: 'PENDING_APPROVAL' };
+  }
   return { profileId: match.profileId, name: match.name };
 }
 
@@ -150,6 +156,33 @@ function approveProfile(profileId){
   for(var i=1;i<data.length;i++){
     if(String(data[i][0]) === String(profileId)){
       sheet.getRange(i+1, 6).setValue('approved');
+      return { ok: true };
+    }
+  }
+  return { error: 'PROFILE_NOT_FOUND' };
+}
+
+// Admin: set a profile's status (approved / locked)
+function setProfileStatus(profileId, status){
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
+  var data = sheet.getDataRange().getValues();
+  for(var i=1;i<data.length;i++){
+    if(String(data[i][0]) === String(profileId)){
+      sheet.getRange(i+1, 6).setValue(status);
+      return { ok: true };
+    }
+  }
+  return { error: 'PROFILE_NOT_FOUND' };
+}
+
+// Admin: replace a profile's PIN
+function resetPin(profileId, newPin){
+  if(!newPin || String(newPin).length < 4) return { error: 'PIN_TOO_SHORT' };
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PROFILES);
+  var data = sheet.getDataRange().getValues();
+  for(var i=1;i<data.length;i++){
+    if(String(data[i][0]) === String(profileId)){
+      sheet.getRange(i+1, 3).setValue(String(newPin));
       return { ok: true };
     }
   }

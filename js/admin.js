@@ -1,21 +1,11 @@
 /* ====================================================
-   MINDORA — admin.js  (v2)
-   Profile management for the standalone admin page.
-
-   ── Local mode (no Apps Script URL configured) ──────
-   Reads/writes the 'mindora_profiles_local' key in
-   localStorage. IMPORTANT: localStorage is per-browser,
-   per-origin. Both this admin page and the main app
-   MUST be served from the same origin (e.g. the same
-   GitHub Pages URL) AND opened in the same browser on
-   the same device for pending registrations to appear.
-   If a user registers on their phone and you check admin
-   on your laptop, the profile will not appear — use
-   remote mode for cross-device management.
-
-   ── Remote mode (Apps Script URL in config.js) ──────
-   Reads/writes via the configured Apps Script backend
-   (Google Sheets). Works across any device on any browser.
+   MINDORA — admin.js  (v3)
+   Full profile management:
+     • Approve / Reject pending profiles
+     • Lock / Unlock any profile  
+     • Reset PIN for any profile
+     • Remove a profile entirely
+     • Add a new auto-approved profile
    ==================================================== */
 
 const Admin = (function(){
@@ -23,7 +13,7 @@ const Admin = (function(){
   let profiles = [];
   let lastRefreshed = null;
 
-  // ── Render the full admin panel ──────────────────────
+  // ── Main render entry ─────────────────────────────
 
   async function render(){
     await loadProfiles();
@@ -38,7 +28,7 @@ const Admin = (function(){
       profiles = await Profiles.listAllProfiles();
       lastRefreshed = new Date();
     }catch(e){
-      console.error('Mindora admin: could not load profiles', e);
+      console.error('Mindora admin: listAllProfiles failed', e);
       profiles = [];
     }
   }
@@ -46,9 +36,9 @@ const Admin = (function(){
   function renderPendingBanner(){
     const banner = document.getElementById('adminPendingBanner');
     if(!banner) return;
-    const pending = profiles.filter(p => (p.status || 'approved') === 'pending');
-    if(pending.length){
-      banner.textContent = I18n.t('admin_pending_count', { n: pending.length });
+    const n = profiles.filter(p => (p.status||'approved') === 'pending').length;
+    if(n > 0){
+      banner.textContent = I18n.t('admin_pending_count', { n });
       banner.classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
@@ -59,63 +49,124 @@ const Admin = (function(){
     const container = document.getElementById('adminProfileList');
     if(!container) return;
 
-    // Update refresh timestamp
-    const ts = document.getElementById('adminRefreshTime');
-    if(ts && lastRefreshed){
-      ts.textContent = lastRefreshed.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+    const tsEl = document.getElementById('adminRefreshTime');
+    if(tsEl && lastRefreshed){
+      tsEl.textContent = lastRefreshed.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
     }
 
     if(!profiles.length){
-      container.innerHTML = `<p class="empty-state">${I18n.t('admin_empty')}</p>`;
+      // Show a diagnostic note in local mode
+      const diag = Profiles.localDiagnostic();
+      if(diag && diag.profileCount === 0){
+        container.innerHTML = `
+          <div class="admin-empty-state">
+            <p>${I18n.t('admin_local_empty_hint')}</p>
+            <div class="admin-diag-box" style="margin-top:10px;">
+              <p style="font-size:.74rem; color:var(--text-muted); font-family:var(--font-mono);">
+                Mindora keys in this browser: ${diag.mindoraKeys.length}<br>
+                ${diag.mindoraKeys.map(k=>'· '+k).join('<br>')}
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `<p class="empty-state">${I18n.t('admin_empty')}</p>`;
+      }
       return;
     }
 
-    // Pending first, then alpha
+    // Sort: pending first, then locked, then approved; alpha within each group
+    const order = { pending:0, locked:1, approved:2 };
     const sorted = profiles.slice().sort((a,b) => {
-      const ap = (a.status||'approved') === 'pending' ? 0 : 1;
-      const bp = (b.status||'approved') === 'pending' ? 0 : 1;
-      if(ap !== bp) return ap - bp;
+      const sa = order[a.status||'approved'] ?? 2;
+      const sb = order[b.status||'approved'] ?? 2;
+      if(sa !== sb) return sa - sb;
       return (a.name||'').localeCompare(b.name||'');
     });
 
     container.innerHTML = sorted.map(p => {
-      const isPending = (p.status || 'approved') === 'pending';
+      const status = p.status || 'approved';
+      const isPending = status === 'pending';
+      const isLocked  = status === 'locked';
+
+      const badgeLabel = isPending ? I18n.t('admin_status_pending')
+                       : isLocked  ? I18n.t('admin_status_locked')
+                       : I18n.t('admin_status_approved');
+
+      const approveBtn = isPending
+        ? `<button class="admin-action-btn approve-btn" data-approve="${p.profileId}" title="${I18n.t('admin_approve')}">${I18n.t('admin_approve')}</button>`
+        : '';
+      const lockBtn = !isPending
+        ? isLocked
+          ? `<button class="admin-action-btn unlock-btn" data-unlock="${p.profileId}" title="${I18n.t('admin_unlock')}">${I18n.t('admin_unlock')}</button>`
+          : `<button class="admin-action-btn lock-btn" data-lock="${p.profileId}" title="${I18n.t('admin_lock')}">${I18n.t('admin_lock')}</button>`
+        : '';
+      const resetBtn = `<button class="admin-action-btn pin-btn" data-reset-pin="${p.profileId}" data-name="${escHtml(p.name)}" title="${I18n.t('admin_reset_pin')}">${I18n.t('admin_reset_pin')}</button>`;
+      const removeBtn = `<button class="admin-action-btn remove-btn" data-remove="${p.profileId}" data-name="${escHtml(p.name)}" title="${I18n.t('admin_remove')}">✕</button>`;
+
       return `
-        <div class="admin-profile-row ${isPending ? 'pending' : ''}">
+        <div class="admin-profile-row ${status}">
           <div class="admin-profile-info">
-            <span class="admin-profile-name">${escapeHtml(p.name)}</span>
-            <span class="admin-badge ${isPending ? 'pending' : 'approved'}">
-              ${isPending ? I18n.t('admin_status_pending') : I18n.t('admin_status_approved')}
-            </span>
+            <span class="admin-profile-name">${escHtml(p.name)}</span>
+            <span class="admin-badge ${status}">${badgeLabel}</span>
           </div>
           <div class="admin-profile-actions">
-            ${isPending ? `<button class="btn-approve" data-approve="${p.profileId}">${I18n.t('admin_approve')}</button>` : ''}
-            <button class="btn-remove-profile" data-remove="${p.profileId}" data-name="${escapeHtml(p.name)}" aria-label="${I18n.t('admin_remove')} ${escapeHtml(p.name)}">✕</button>
+            ${approveBtn}${lockBtn}${resetBtn}${removeBtn}
           </div>
         </div>
       `;
     }).join('');
 
-    // Wire approve buttons
+    wireActions(container);
+  }
+
+  function wireActions(container){
+    // Approve
     container.querySelectorAll('[data-approve]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-approve');
-        btn.disabled = true;
-        btn.textContent = I18n.t('loading');
-        try{
-          await Profiles.approveProfile(id);
-          await loadProfiles();
-          renderPendingBanner();
-          renderProfileList();
-        }catch(e){
-          console.error('Mindora admin: approve failed', e);
-          btn.disabled = false;
-          btn.textContent = I18n.t('admin_approve');
-        }
+        await runAction(btn, () => Profiles.approveProfile(btn.getAttribute('data-approve')));
       });
     });
 
-    // Wire remove buttons
+    // Lock
+    container.querySelectorAll('[data-lock]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await runAction(btn, () => Profiles.lockProfile(btn.getAttribute('data-lock')));
+      });
+    });
+
+    // Unlock
+    container.querySelectorAll('[data-unlock]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await runAction(btn, () => Profiles.unlockProfile(btn.getAttribute('data-unlock')));
+      });
+    });
+
+    // Reset PIN
+    container.querySelectorAll('[data-reset-pin]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id   = btn.getAttribute('data-reset-pin');
+        const name = btn.getAttribute('data-name');
+        const ok = await Modal.confirmDialog({
+          title: `${I18n.t('admin_reset_pin')}: ${name}`,
+          body: I18n.t('admin_reset_pin_prompt'),
+          checkboxLabel: null,
+          confirmText: I18n.t('admin_reset_pin_confirm'),
+          cancelText: I18n.t('btn_cancel'),
+          inputPlaceholder: '••••',
+          inputType: 'password',
+          danger: false
+        });
+        if(!ok) return;
+        const pin = ok.inputValue;
+        if(!pin || pin.length < 4){
+          showAdminError(I18n.t('profile_error_pin')); return;
+        }
+        await runAction(btn, () => Profiles.resetProfilePin(id, pin));
+      });
+    });
+
+    // Remove
     container.querySelectorAll('[data-remove]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id   = btn.getAttribute('data-remove');
@@ -128,18 +179,34 @@ const Admin = (function(){
           danger: true
         });
         if(!ok) return;
-        btn.disabled = true;
-        try{
-          await Profiles.removeProfile(id);
-          await loadProfiles();
-          renderPendingBanner();
-          renderProfileList();
-        }catch(e){
-          console.error('Mindora admin: remove failed', e);
-          btn.disabled = false;
-        }
+        await runAction(btn, () => Profiles.removeProfile(id));
       });
     });
+  }
+
+  async function runAction(btn, fn){
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try{
+      await fn();
+      await loadProfiles();
+      renderPendingBanner();
+      renderProfileList();
+    }catch(e){
+      console.error('Mindora admin action failed', e);
+      btn.disabled = false;
+      btn.textContent = orig;
+      showAdminError(e.message);
+    }
+  }
+
+  function showAdminError(msg){
+    const el = document.getElementById('adminGlobalError');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 4000);
   }
 
   async function addProfile(name, pin){
@@ -149,7 +216,7 @@ const Admin = (function(){
     renderProfileList();
   }
 
-  function escapeHtml(str){
+  function escHtml(str){
     const d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
