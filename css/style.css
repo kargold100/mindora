@@ -551,3 +551,90 @@ textarea{resize:vertical;}
   }
   .app-shell{border-left:1px solid var(--border); border-right:1px solid var(--border);}
 }
+
+/* ==================== EMOJI PICKER ==================== */
+.emoji-picker{
+  display:flex; justify-content:space-between; gap:4px; padding:6px 0;
+}
+.emoji-btn{
+  flex:1; background:var(--bg-card-2); border:2px solid transparent;
+  border-radius:var(--radius-md); padding:10px 4px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  transition:transform .1s ease, border-color .15s ease, background .15s ease;
+  cursor:pointer;
+}
+.emoji-btn:active{transform:scale(0.93);}
+.emoji-btn.selected{
+  border-color:var(--dusk); background:rgba(107,111,158,0.12);
+  box-shadow:0 0 0 3px rgba(107,111,158,0.18);
+}
+.emoji-face{font-size:1.75rem; line-height:1; display:block;}
+.emoji-label{font-size:.64rem; color:var(--text-muted); font-weight:600; text-align:center;}
+.emoji-btn.selected .emoji-label{color:var(--dusk);}
+
+/* ==================== CHECK-IN SECTIONS ==================== */
+.checkin-section{
+  border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:16px;
+}
+.checkin-section:last-of-type{border-bottom:none; margin-bottom:0;}
+.checkin-step-label{
+  font-family:var(--font-display); font-size:1rem; font-weight:600; margin-bottom:6px;
+}
+.checkin-step-hint{font-size:.8rem; margin-bottom:12px; margin-top:-2px;}
+
+/* ==================== PERIOD NAV (TRENDS) ==================== */
+.period-nav{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-bottom:12px; background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:10px 14px;
+}
+.period-nav-btn{
+  background:var(--bg-card-2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:50%; font-size:1rem; display:flex;
+  align-items:center; justify-content:center; transition:transform .1s ease;
+  flex-shrink:0;
+}
+.period-nav-btn:active{transform:scale(0.92);}
+.period-nav-btn:disabled{opacity:.35; cursor:default;}
+.period-nav-label{
+  flex:1; text-align:center; font-weight:600; font-size:.88rem; color:var(--text-muted);
+}
+
+/* ==================== GOAL CARDS ==================== */
+.goal-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:16px; margin-bottom:12px;
+}
+.goal-card.done{border-color:var(--moss); background:rgba(124,152,133,0.06);}
+.goal-header{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
+.goal-name{font-weight:600; font-size:.92rem; flex:1;}
+.goal-status-badge{
+  font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px;
+  text-transform:uppercase; letter-spacing:.03em; flex-shrink:0;
+}
+.goal-status-badge.active{background:rgba(107,111,158,0.15); color:var(--dusk);}
+.goal-status-badge.done{background:rgba(124,152,133,0.2); color:var(--moss);}
+.goal-desc{font-size:.82rem; color:var(--text-muted); margin-bottom:8px;}
+.goal-progress-wrap{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.goal-progress-bar-bg{flex:1; height:8px; background:var(--bg-card-2); border-radius:6px; overflow:hidden;}
+.goal-progress-bar-fill{height:100%; background:linear-gradient(90deg, var(--dusk), var(--bloom)); border-radius:6px; transition:width .4s ease;}
+.goal-progress-bar-fill.done{background:var(--moss);}
+.goal-pct{font-family:var(--font-mono); font-size:.78rem; width:38px; text-align:right; color:var(--text-muted);}
+.goal-remove-btn{font-size:.78rem; color:var(--text-muted);}
+
+/* ==================== TODAY GOALS STRIP ==================== */
+.goals-today-wrap{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+.today-goal-chip{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:8px 12px; display:grid; align-items:center;
+  grid-template-columns:1fr auto auto; gap:10px;
+}
+.today-goal-chip.done{border-color:var(--moss);}
+.today-goal-label{font-size:.82rem; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.today-goal-bar-bg{width:80px; height:6px; background:var(--bg-card-2); border-radius:4px; overflow:hidden;}
+.today-goal-bar-fill{height:100%; background:linear-gradient(90deg, var(--dusk), var(--bloom)); border-radius:4px;}
+.today-goal-pct{font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted); width:36px; text-align:right;}
+
+/* ==================== SUMMARY BITS ==================== */
+.summary-bits{font-size:.88rem; line-height:1.7; margin:0 0 8px;}
+.summary-journal{font-size:.85rem; color:var(--text-muted); font-style:italic; margin-top:6px;}

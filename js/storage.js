@@ -141,6 +141,8 @@ const Storage = (function(){
       journal: entry.journal || '',
       sleepHours: (entry.sleepHours === '' || entry.sleepHours === undefined) ? null : Number(entry.sleepHours),
       stressLevel: entry.stressLevel,
+      weather: entry.weather || null,
+      social: entry.social || null,
       energy: (entry.energy === undefined) ? null : entry.energy,
       enjoyment: (entry.enjoyment === undefined) ? null : entry.enjoyment,
       connection: (entry.connection === undefined) ? null : entry.connection,
@@ -166,6 +168,63 @@ const Storage = (function(){
   function getMoodEntriesInRange(days){
     const cutoff = dateStrDaysAgo(days-1);
     return cache.moodEntries.filter(e => e.date >= cutoff).sort((a,b) => a.date.localeCompare(b.date));
+  }
+
+  // getMoodEntriesInPeriod supports navigating to previous periods.
+  // offset 0 = current period, -1 = one period back, etc.
+  function getMoodEntriesInPeriod(days, offset){
+    offset = offset || 0;
+    if(offset === 0) return getMoodEntriesInRange(days);
+    // Find the end date for this offset period
+    const daysBack = Math.abs(offset) * days;
+    const endDate = dateStrDaysAgo(daysBack - days); // end of that period
+    const startDate = dateStrDaysAgo(daysBack - 1);   // start of that period (days-1 days before end)
+    // Actually: period end = today - (|offset| * days), period start = today - (|offset| * days + days - 1)
+    const endD = dateStrDaysAgo(Math.abs(offset) * days - days);
+    const startD = dateStrDaysAgo(Math.abs(offset) * days + days - 1);
+    return cache.moodEntries.filter(e => e.date >= startD && e.date <= endD).sort((a,b) => a.date.localeCompare(b.date));
+  }
+
+  function getPeriodBounds(days, offset){
+    offset = offset || 0;
+    if(offset === 0){
+      return { start: dateStrDaysAgo(days-1), end: todayStr() };
+    }
+    const endD = dateStrDaysAgo(Math.abs(offset) * days - days);
+    const startD = dateStrDaysAgo(Math.abs(offset) * days + days - 1);
+    return { start: startD, end: endD };
+  }
+
+  function getLogsInPeriod(days, offset){
+    const bounds = getPeriodBounds(days, offset || 0);
+    return cache.exerciseLogs.filter(l => l.date >= bounds.start && l.date <= bounds.end).sort((a,b) => b.timestamp - a.timestamp);
+  }
+
+  // ---------- Goals ----------
+
+  function getGoals(){
+    const s = getSettings();
+    return Array.isArray(s.goals) ? s.goals : [];
+  }
+
+  function saveGoal(goal){
+    const goals = getGoals();
+    goal.id = 'goal_' + Date.now();
+    goal.createdAt = todayStr();
+    goal.completedAt = null;
+    goals.push(goal);
+    saveSettings({ goals });
+    return goal;
+  }
+
+  function removeGoal(id){
+    const goals = getGoals().filter(g => g.id !== id);
+    saveSettings({ goals });
+  }
+
+  function updateGoal(id, partial){
+    const goals = getGoals().map(g => g.id === id ? Object.assign({}, g, partial) : g);
+    saveSettings({ goals });
   }
 
   // ---------- Exercise logs ----------
@@ -296,15 +355,22 @@ const Storage = (function(){
     getTodayEntry,
     saveMoodEntry,
     getMoodEntriesInRange,
+    getMoodEntriesInPeriod,
+    getPeriodBounds,
     getLogs,
     saveLog,
     deleteLog,
     getLogsInRange,
+    getLogsInPeriod,
     getRecentLogs,
     getSettings,
     saveSettings,
     getGamification,
     saveGamification,
+    getGoals,
+    saveGoal,
+    removeGoal,
+    updateGoal,
     exportAllAsJson,
     exportAllAsCsv,
     clearProfileData

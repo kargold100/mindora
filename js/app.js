@@ -53,6 +53,7 @@
     if(name === 'today') refreshTodayScreen();
     if(name === 'chat') refreshChatScreen();
     if(name === 'learn') renderLearnScreen();
+    if(name === 'goals'){ Goals.render(); }
     window.scrollTo(0,0);
   }
 
@@ -69,6 +70,7 @@
     renderStreakRow();
     renderRecommendations();
     checkReminderBanner();
+    Goals.renderTodaySummary();
   }
 
   function checkReminderBanner(){
@@ -200,8 +202,7 @@
 
   function refreshChatScreen(){
     const has = Chat.hasApiKey();
-    document.getElementById('chatApiKeyPrompt').classList.toggle('hidden', has);
-    document.getElementById('chatPanel').classList.toggle('hidden', !has);
+    document.getElementById('chatNotice').classList.toggle('hidden', has);
     if(has){
       const settings = Storage.getSettings();
       document.getElementById('chatContextToggle').checked = !!settings.chatIncludeContext;
@@ -493,7 +494,20 @@
       });
     });
 
-    // Learn / Well-being sub-tabs
+    // Trends period navigation (prev/next)
+    document.getElementById('trendsPrevBtn').addEventListener('click', () => Trends.navigate(-1));
+    document.getElementById('trendsNextBtn').addEventListener('click', () => Trends.navigate(+1));
+
+    // Goals
+    document.getElementById('goalAddBtn').addEventListener('click', () => {
+      const type   = document.getElementById('goalTypeSelect').value;
+      const target = Number(document.getElementById('goalTargetInput').value);
+      const window_ = Number(document.getElementById('goalWindowInput').value);
+      if(!type || !target || target < 1){ return; }
+      Goals.addGoal(type, target, window_);
+      Goals.render();
+      showToast(I18n.t('goals_active_label'));
+    });
     document.querySelectorAll('#learnTabs .range-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('#learnTabs .range-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-pressed','false'); });
@@ -559,6 +573,9 @@
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       downloadFile(`mindora-export-${Storage.todayStr()}.csv`, Storage.exportAllAsCsv(), 'text/csv');
       showToast(I18n.t('toast_exported'));
+    });
+    document.getElementById('exportReportBtn').addEventListener('click', () => {
+      Report.generate(30);
     });
     document.getElementById('clearDataBtn').addEventListener('click', async () => {
       const ok = await Modal.confirmDialog({
