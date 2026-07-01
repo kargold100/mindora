@@ -168,7 +168,7 @@ const Mood = (function(){
       orb.style.boxShadow = `0 0 44px 8px ${color}55`;
       orb.style.animationDuration = `${(6.5 - (value/10)*3).toFixed(1)}s`;
     }
-    if(mini) mini.style.background = `radial-gradient(circle at 35% 30%, ${color}, var(--dusk))`;
+    if(mini) mini.style.color = color; // subtle color hint on the brand name
   }
 
   function moodDescriptor(value){
