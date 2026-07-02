@@ -151,6 +151,12 @@ const Storage = (function(){
       tension: (entry.tension === undefined) ? null : entry.tension,
       outlook: (entry.outlook === undefined) ? null : entry.outlook,
       appetite: (entry.appetite === undefined) ? null : entry.appetite,
+      water:      (entry.water      == null || entry.water === '') ? null : Number(entry.water),
+      food:       entry.food      || null,
+      screenTime: (entry.screenTime === undefined) ? null : entry.screenTime,
+      triggers:   Array.isArray(entry.triggers)  ? entry.triggers  : [],
+      gratitude:  Array.isArray(entry.gratitude) ? entry.gratitude : [null,null,null],
+      dailyWins:  entry.dailyWins || null,
       timestamp: Date.now()
     };
     const idx = cache.moodEntries.findIndex(e => e.date === record.date);

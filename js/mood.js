@@ -25,8 +25,13 @@ const Mood = (function(){
     'lonely','irritable'
   ];
 
-  const WEATHER = ['sunny','cloudy','rainy','hot','cold'];
-  const SOCIAL   = ['alone','family','friends','work'];
+  const TRIGGERS  = ['work','family','health','money','sleep','relationships'];
+  const FOOD_OPTS = ['healthy','average','poor','skipped'];
+  const WEATHER   = ['sunny','cloudy','rainy','hot','cold'];
+  const SOCIAL    = ['alone','family','friends','work'];
+
+  let selectedTriggers = [];
+  let selectedFood     = null;
   const APPETITE = ['normal','less','more','skipped'];
 
   let selectedTags    = [];
@@ -122,6 +127,42 @@ const Mood = (function(){
           ? selectedTags = selectedTags.filter(x => x !== t)
           : selectedTags.push(t);
         renderTagChips();
+      });
+    });
+  }
+
+  function renderTriggerChips(){
+    const wrap = document.getElementById('triggerChips');
+    if(!wrap) return;
+    wrap.innerHTML = TRIGGERS.map(k => `
+      <button type="button" class="chip ${selectedTriggers.includes(k)?'selected':''}" data-trigger="${k}">
+        ${I18n.t('trigger_'+k)}
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-trigger]').forEach(b => {
+      b.addEventListener('click', () => {
+        const k = b.getAttribute('data-trigger');
+        selectedTriggers.includes(k)
+          ? selectedTriggers = selectedTriggers.filter(x=>x!==k)
+          : selectedTriggers.push(k);
+        renderTriggerChips();
+      });
+    });
+  }
+
+  function renderFoodChips(){
+    const wrap = document.getElementById('foodChips');
+    if(!wrap) return;
+    wrap.innerHTML = FOOD_OPTS.map(k => `
+      <button type="button" class="chip ${selectedFood===k?'selected':''}" data-food="${k}">
+        ${I18n.t('food_'+k)}
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-food]').forEach(b => {
+      b.addEventListener('click', () => {
+        const k = b.getAttribute('data-food');
+        selectedFood = (selectedFood === k) ? null : k;
+        renderFoodChips();
       });
     });
   }
@@ -226,10 +267,31 @@ const Mood = (function(){
     const journalEl = document.getElementById('journalInput');
     if(journalEl) journalEl.value = pf.journal || '';
 
+    selectedTriggers = pf.triggers ? pf.triggers.slice() : [];
+    selectedFood     = pf.food || null;
+
+    // Water field
+    const waterEl = document.getElementById('waterInput');
+    if(waterEl) waterEl.value = (pf.water !== null && pf.water !== undefined) ? pf.water : '';
+
+    // Screen time slider
+    const stEl = document.getElementById('screenTimeSlider');
+    if(stEl){ stEl.value = pf.screenTime ?? 4; document.getElementById('screenTimeValueLabel').textContent = pf.screenTime ?? 4; }
+
+    // Gratitude fields
+    for(let i=0;i<3;i++){
+      const el = document.getElementById('gratitude'+i);
+      if(el) el.value = (pf.gratitude && pf.gratitude[i]) ? pf.gratitude[i] : '';
+    }
+    const winsEl = document.getElementById('dailyWinsInput');
+    if(winsEl) winsEl.value = pf.dailyWins || '';
+
     renderEmojiPicker();
     renderWeatherChips();
     renderSocialChips();
     renderTagChips();
+    renderTriggerChips();
+    renderFoodChips();
     renderAppetiteChips();
     renderOrb(selectedEmoji);
 
@@ -271,7 +333,13 @@ const Mood = (function(){
       sleepQuality:panelExpanded ? getSlider('sleepQualitySlider') : null,
       tension:     panelExpanded ? getSlider('tensionSlider')      : null,
       outlook:     panelExpanded ? getSlider('outlookSlider')      : null,
-      appetite:    panelExpanded ? selectedAppetite                : null
+      appetite:    panelExpanded ? selectedAppetite                : null,
+      water:       (() => { const v = document.getElementById('waterInput')?.value; return (v===''||v==null) ? null : Number(v); })(),
+      food:        selectedFood,
+      screenTime:  (() => { const el = document.getElementById('screenTimeSlider'); return el ? Number(el.value) : null; })(),
+      triggers:    selectedTriggers.slice(),
+      gratitude:   [0,1,2].map(i => { const el = document.getElementById('gratitude'+i); return el ? (el.value.trim()||null) : null; }),
+      dailyWins:   (document.getElementById('dailyWinsInput')?.value||'').trim()||null
     };
   }
 

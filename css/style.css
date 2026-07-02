@@ -889,3 +889,144 @@ select.select-input{ color:var(--text); }
   .app-shell{ border-left:1px solid var(--border); border-right:1px solid var(--border); }
   main#screens{ padding:4px 20px 110px; }
 }
+
+/* ══════════════════════════════════════════════════
+   WELLNESS SCORE
+══════════════════════════════════════════════════ */
+.wellness-overall{
+  display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.wellness-overall-num{
+  font-family:var(--font-mono); font-size:2.2rem; font-weight:700; line-height:1;
+}
+.wellness-overall-label{ font-size:.84rem; color:var(--text-muted); }
+.wellness-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.wellness-item{
+  text-align:center; background:var(--bg-card-2); border-radius:var(--r-md); padding:12px 8px;
+}
+.wellness-val{ font-family:var(--font-mono); font-size:1.3rem; font-weight:700; display:block; }
+.wellness-bar-bg{
+  width:100%; height:5px; background:var(--border); border-radius:999px;
+  margin:6px 0 4px; overflow:hidden;
+}
+.wellness-bar-fill{
+  height:100%; border-radius:999px; transition:width var(--duration-slow) var(--ease-out);
+}
+.wellness-item-label{ font-size:.72rem; color:var(--text-muted); font-weight:600; }
+
+/* ══════════════════════════════════════════════════
+   HABITS
+══════════════════════════════════════════════════ */
+.habit-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:14px; margin-bottom:10px; transition:border-color .2s;
+}
+.habit-card.done{ border-color:var(--moss); }
+.habit-main{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.habit-name{ font-weight:600; font-size:.9rem; flex:1; }
+.habit-freq{
+  font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--text-muted); background:var(--bg-card-2); padding:2px 7px; border-radius:999px;
+}
+.habit-stats{
+  display:flex; gap:12px; flex-wrap:wrap; font-size:.76rem; color:var(--text-muted); margin-bottom:8px;
+}
+.habit-stats strong{ color:var(--text); }
+.habit-bar-bg{ width:100%; height:5px; background:var(--bg-card-2); border-radius:999px; overflow:hidden; margin-bottom:10px; }
+.habit-bar-fill{ height:100%; background:linear-gradient(90deg,var(--dusk),var(--bloom)); border-radius:999px; transition:width .4s var(--ease-out); }
+.habit-actions{ display:flex; align-items:center; gap:8px; }
+.habit-toggle-btn{
+  flex:1; padding:9px 14px; border-radius:999px; font-weight:600; font-size:.82rem;
+  background:var(--bg-card-2); border:1px solid var(--border-2); color:var(--text);
+  transition:all .15s ease;
+}
+.habit-toggle-btn.done{
+  background:var(--moss-faint); border-color:var(--moss); color:var(--moss);
+}
+.habit-remove-btn{ flex-shrink:0; font-size:.82rem; color:var(--text-faint); }
+.habit-remove-btn:hover{ color:var(--bloom); }
+
+/* Quick habit strip on Today */
+.habits-quick-strip{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; }
+.habit-quick-btn{
+  padding:8px 13px; border-radius:999px; font-size:.8rem; font-weight:600;
+  background:var(--bg-card); border:1px solid var(--border-2); color:var(--text-muted);
+  transition:all .15s ease;
+}
+.habit-quick-btn.done{
+  background:var(--moss-faint); border-color:var(--moss); color:var(--moss);
+}
+
+/* ══════════════════════════════════════════════════
+   BREATHING TOOLS
+══════════════════════════════════════════════════ */
+.breathing-tools{ display:flex; flex-direction:column; gap:14px; }
+.breath-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-xl); padding:18px;
+}
+.breath-name{ font-family:var(--font-serif); font-size:1rem; margin-bottom:4px; }
+.breath-desc{ font-size:.84rem; margin-bottom:14px; }
+.breath-visual{
+  display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:14px; padding:12px 0;
+}
+.breath-orb{
+  width:90px; height:90px; border-radius:50%;
+  background:radial-gradient(circle at 38% 32%, var(--dusk), var(--ink-softer) 70%);
+  box-shadow:0 0 30px 6px rgba(101,104,168,0.25);
+}
+.breath-phase-label{
+  font-family:var(--font-serif); font-size:1.05rem; font-weight:600; color:var(--text);
+  min-height:1.4em; text-align:center;
+}
+.breath-counter{
+  font-family:var(--font-mono); font-size:.88rem; color:var(--text-muted); min-height:1.2em;
+  text-align:center;
+}
+.grounding-card .grounding-steps{
+  margin:12px 0 0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:8px;
+}
+.grounding-steps li{ font-size:.88rem; line-height:1.5; color:var(--text); }
+
+/* ══════════════════════════════════════════════════
+   JOURNAL SCREEN
+══════════════════════════════════════════════════ */
+.journal-search-row{ margin-bottom:14px; }
+.journal-entries-list{ display:flex; flex-direction:column; gap:12px; }
+.journal-entry-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-xl); padding:16px;
+  transition:border-color .2s;
+}
+.journal-entry-card:hover{ border-color:var(--border-2); }
+.journal-entry-header{
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
+}
+.journal-entry-date{ font-size:.78rem; color:var(--text-muted); font-weight:600; }
+.journal-entry-mood{ font-size:.82rem; }
+.journal-entry-text{
+  font-size:.9rem; line-height:1.6; margin:0 0 8px;
+  padding-left:10px; border-left:2px solid var(--dusk-faint);
+  font-style:italic; color:var(--text-muted);
+}
+.journal-gratitude{
+  display:flex; flex-direction:column; gap:4px; margin-top:8px;
+}
+.journal-grat-item{ font-size:.82rem; color:var(--moss); }
+.journal-wins{ font-size:.82rem; color:var(--bloom); margin-top:6px; }
+
+/* ══════════════════════════════════════════════════
+   FONT SIZE TOGGLE (Accessibility)
+══════════════════════════════════════════════════ */
+.font-size-row{ display:flex; gap:8px; }
+.font-size-btn{
+  flex:1; padding:10px; font-size:.84rem; font-weight:600;
+  background:var(--bg-card-2); border:1px solid var(--border-2); color:var(--text-muted);
+  border-radius:var(--r-md); transition:all .15s ease;
+}
+.font-size-btn.active{ background:var(--dusk-faint); border-color:var(--dusk); color:var(--dusk); }
+
+/* Apply font size to html element */
+[data-fontsize="large"]  body{ font-size:18px; }
+[data-fontsize="xl"]     body{ font-size:20px; }
+[data-fontsize="large"]  .mood-slider-labels,
+[data-fontsize="xl"]     .mood-slider-labels{ font-size:.82rem; }

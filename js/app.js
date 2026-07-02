@@ -10,7 +10,7 @@
   let chatCrisisFlag = false; // set true if crisis language appears in chat, independent of mood entries
   let profileMode = 'create'; // 'create' | 'login'
   let chatTyping = false;
-  let learnTab = 'understand'; // 'understand' | 'wellbeing'
+  let learnTab = 'understand'; // 'understand' | 'wellbeing' | 'tools'
 
   // ---------- Language selects ----------
 
@@ -54,14 +54,33 @@
     if(name === 'chat') refreshChatScreen();
     if(name === 'learn') renderLearnScreen();
     if(name === 'goals'){ Goals.render(); }
+    if(name === 'habits'){ Habits.render(); Goals.render(); }
+    if(name === 'journal') renderJournalScreen();
     window.scrollTo(0,0);
   }
 
   function renderLearnScreen(){
     const subtitleEl = document.getElementById('learnSubtitleText');
-    subtitleEl.setAttribute('data-i18n', learnTab === 'understand' ? 'learn_subtitle' : 'wellbeing_subtitle');
+    const topicsEl   = document.getElementById('learnTopics');
+    const breathEl   = document.getElementById('breathingTools');
+    const isTools    = learnTab === 'tools';
+
+    subtitleEl.setAttribute('data-i18n',
+      learnTab === 'understand' ? 'learn_subtitle'
+      : learnTab === 'wellbeing' ? 'wellbeing_subtitle'
+      : 'breathing_subtitle');
     I18n.applyStaticTranslations();
-    if(learnTab === 'understand') Learn.render(); else Wellbeing.render();
+
+    if(topicsEl)  topicsEl.classList.toggle('hidden', isTools);
+    if(breathEl)  breathEl.classList.toggle('hidden', !isTools);
+
+    if(isTools){
+      Breathing.renderAll();
+    } else if(learnTab === 'understand'){
+      Learn.render();
+    } else {
+      Wellbeing.render();
+    }
   }
 
   function refreshTodayScreen(){
@@ -71,7 +90,12 @@
     renderRecommendations();
     checkReminderBanner();
     Goals.renderTodaySummary();
+    Habits.renderTodaySummary();
+    Wellness.render();
   }
+
+  // Exposed so habits.js can trigger a today refresh on quick-toggle
+  window.MindoraRefreshToday = refreshTodayScreen;
 
   function checkReminderBanner(){
     const banner = document.getElementById('reminderBanner');
@@ -159,8 +183,59 @@
     if(document.getElementById('screen-trends').classList.contains('active')) Trends.renderAll();
   }
 
+  function renderJournalScreen(){
+    const container  = document.getElementById('journalEntries');
+    const searchEl   = document.getElementById('journalSearch');
+    if(!container) return;
+    const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+    const entries = Storage.getMoodEntries()
+      .filter(e => e.journal && e.journal.trim())
+      .sort((a,b) => b.date.localeCompare(a.date));
+
+    const filtered = query
+      ? entries.filter(e =>
+          e.journal.toLowerCase().includes(query) ||
+          (e.tags||[]).some(t => t.toLowerCase().includes(query)) ||
+          (e.gratitude||[]).some(g => g && g.toLowerCase().includes(query))
+        )
+      : entries;
+
+    if(!filtered.length){
+      container.innerHTML = `<p class="empty-state">${query ? I18n.t('journal_no_results') : I18n.t('journal_no_entries')}</p>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(e => {
+      const d = new Date(e.date+'T00:00:00');
+      const dateStr = d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+      const emoji = Mood.EMOJIS.reduce((best, em) => Math.abs(em.value - e.mood) < Math.abs(best.value - e.mood) ? em : best);
+      const gratLines = (e.gratitude||[]).filter(Boolean);
+      return `
+        <div class="journal-entry-card">
+          <div class="journal-entry-header">
+            <span class="journal-entry-date">${dateStr}</span>
+            <span class="journal-entry-mood">${emoji.face} ${e.mood}/10</span>
+          </div>
+          ${e.journal ? `<p class="journal-entry-text">${escapeHtml(e.journal)}</p>` : ''}
+          ${gratLines.length ? `
+            <div class="journal-gratitude">
+              ${gratLines.map(g => `<span class="journal-grat-item">✦ ${escapeHtml(g)}</span>`).join('')}
+            </div>` : ''}
+          ${e.dailyWins ? `<p class="journal-wins">🏆 ${escapeHtml(e.dailyWins)}</p>` : ''}
+          ${(e.tags||[]).length ? `
+            <div class="chip-row" style="margin-top:8px;">
+              ${e.tags.map(t => `<span class="chip selected" style="font-size:.72rem; padding:5px 10px;">${I18n.t('tag_'+t)}</span>`).join('')}
+            </div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+  }
+
   function downloadFile(filename, content, mime){
-    const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename;
@@ -310,6 +385,12 @@
     document.getElementById('nameInput').value = settings.name || '';
     document.getElementById('apiKeyInput').value = Chat.getApiKey();
     document.getElementById('reminderTimeInput').value = settings.reminderTime || '';
+    // Apply font size preference
+    if(settings.fontSize){
+      document.documentElement.setAttribute('data-fontsize', settings.fontSize);
+      const btn = document.querySelector(`.font-size-btn[data-size="${settings.fontSize}"]`);
+      if(btn){ document.querySelectorAll('.font-size-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+    }
     chatCrisisFlag = false;
     Chat.clearChat();
     goToScreen('today');
@@ -509,6 +590,44 @@
       Goals.addGoal(type, target, window_);
       Goals.render();
       showToast(I18n.t('goals_active_label'));
+    });
+
+    // Habits add button
+    document.getElementById('habitAddBtn').addEventListener('click', () => {
+      const name  = document.getElementById('habitNameInput').value.trim();
+      const freq  = document.getElementById('habitFreqSelect').value;
+      if(!name) return;
+      try{
+        Habits.addHabit(name, freq);
+        document.getElementById('habitNameInput').value = '';
+        Habits.render();
+        showToast(I18n.t('toast_log_saved'));
+      }catch(e){ console.error(e); }
+    });
+    document.getElementById('habitNameInput').addEventListener('keydown', e => {
+      if(e.key === 'Enter') document.getElementById('habitAddBtn').click();
+    });
+
+    // Journal search
+    document.getElementById('journalSearch').addEventListener('input', () => {
+      renderJournalScreen();
+    });
+
+    // Screen time slider
+    const stSlider = document.getElementById('screenTimeSlider');
+    if(stSlider) stSlider.addEventListener('input', e => {
+      document.getElementById('screenTimeValueLabel').textContent = e.target.value;
+    });
+
+    // Font size
+    document.querySelectorAll('.font-size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const size = btn.getAttribute('data-size');
+        document.documentElement.setAttribute('data-fontsize', size);
+        Storage.saveSettings({ fontSize: size });
+        document.querySelectorAll('.font-size-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
     });
     document.querySelectorAll('#learnTabs .range-tab').forEach(tab => {
       tab.addEventListener('click', () => {
