@@ -121,24 +121,27 @@ const Admin = (function(){
                        : I18n.t('admin_status_approved');
 
       const approveBtn = isPending
-        ? `<button class="admin-action-btn approve-btn" data-approve="${p.profileId}" title="${I18n.t('admin_approve')}">${I18n.t('admin_approve')}</button>`
+        ? `<button class="admin-action-btn approve-btn" data-approve="${p.profileId}">${I18n.t('admin_approve')}</button>`
         : '';
       const lockBtn = !isPending
         ? isLocked
-          ? `<button class="admin-action-btn unlock-btn" data-unlock="${p.profileId}" title="${I18n.t('admin_unlock')}">${I18n.t('admin_unlock')}</button>`
-          : `<button class="admin-action-btn lock-btn" data-lock="${p.profileId}" title="${I18n.t('admin_lock')}">${I18n.t('admin_lock')}</button>`
+          ? `<button class="admin-action-btn unlock-btn" data-unlock="${p.profileId}">${I18n.t('admin_unlock')}</button>`
+          : `<button class="admin-action-btn lock-btn" data-lock="${p.profileId}">${I18n.t('admin_lock')}</button>`
         : '';
-      const resetBtn = `<button class="admin-action-btn pin-btn" data-reset-pin="${p.profileId}" data-name="${escHtml(p.name)}" title="${I18n.t('admin_reset_pin')}">${I18n.t('admin_reset_pin')}</button>`;
-      const removeBtn = `<button class="admin-action-btn remove-btn" data-remove="${p.profileId}" data-name="${escHtml(p.name)}" title="${I18n.t('admin_remove')}">✕</button>`;
+      const resetBtn   = `<button class="admin-action-btn pin-btn" data-reset-pin="${p.profileId}" data-name="${escHtml(p.name)}">${I18n.t('admin_reset_pin')}</button>`;
+      const resendBtn  = (status === 'approved' && p.email) ? `<button class="admin-action-btn resend-btn" data-resend="${p.profileId}" title="Resend approval email to ${escHtml(p.email)}">✉</button>` : '';
+      const removeBtn  = `<button class="admin-action-btn remove-btn" data-remove="${p.profileId}" data-name="${escHtml(p.name)}">✕</button>`;
+      const emailHint  = p.email ? `<span class="admin-profile-email">${escHtml(p.email)}</span>` : '';
 
       return `
         <div class="admin-profile-row ${status}">
           <div class="admin-profile-info">
             <span class="admin-profile-name">${escHtml(p.name)}</span>
             <span class="admin-badge ${status}">${badgeLabel}</span>
+            ${emailHint}
           </div>
           <div class="admin-profile-actions">
-            ${approveBtn}${lockBtn}${resetBtn}${removeBtn}
+            ${approveBtn}${lockBtn}${resetBtn}${resendBtn}${removeBtn}
           </div>
         </div>
       `;
@@ -190,6 +193,23 @@ const Admin = (function(){
           showAdminError(I18n.t('profile_error_pin')); return;
         }
         await runAction(btn, () => Profiles.resetProfilePin(id, pin));
+      });
+    });
+
+    // Resend approval email
+    container.querySelectorAll('[data-resend]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-resend');
+        btn.disabled = true; btn.textContent = '…';
+        try{
+          if(Profiles.isRemoteMode()){
+            await Api.call('resendApprovalEmail', { profileId: id });
+          }
+          if(typeof window.MindoraShowToast === 'function'){
+            window.MindoraShowToast('✉ Email sent');
+          }
+        }catch(e){ console.error('Resend failed', e); }
+        btn.disabled = false; btn.textContent = '✉';
       });
     });
 

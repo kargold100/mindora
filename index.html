@@ -57,6 +57,11 @@
         <input type="text" id="profileNameInput" autocomplete="name">
         <label class="field-label" for="profilePinInput" data-i18n="profile_pin_label">PIN (4+ digits)</label>
         <input type="password" id="profilePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">
+        <div id="profileEmailWrap" class="hidden">
+          <label class="field-label" for="profileEmailInput" data-i18n="field_email">Email (optional)</label>
+          <input type="email" id="profileEmailInput" autocomplete="email" data-i18n-placeholder="email_placeholder">
+          <p class="muted-inline" data-i18n="email_notification_hint" style="display:block; margin-top:4px;"></p>
+        </div>
         <button type="submit" id="profileSubmitBtn" class="btn-primary" style="margin-top:16px;" data-i18n="profile_create_btn">Create profile</button>
       </form>
       <button id="profileToggleBtn" class="link-btn" style="margin-top:12px; width:100%; text-align:center;" data-i18n="profile_toggle_to_login">Already have a profile? Log in</button>
@@ -177,6 +182,8 @@
             <button class="quick-btn" data-quick="mind" data-i18n="quick_mind">+ Mind exercise</button>
           </div>
         </div>
+
+        <div class="card" id="dailyTipCard" style="border-left:3px solid var(--dusk);"></div>
       </section>
 
       <!-- ==================== CHECK-IN ==================== -->
@@ -638,6 +645,7 @@
   <script src="js/goals.js?v=20260701"></script>
   <script src="js/habits.js?v=20260701"></script>
   <script src="js/wellness.js?v=20260701"></script>
+  <script src="js/tips-daily.js?v=20260701"></script>
   <script src="js/breathing.js?v=20260701"></script>
   <script src="js/report.js?v=20260701"></script>
   <script src="js/learn.js?v=20260701"></script>

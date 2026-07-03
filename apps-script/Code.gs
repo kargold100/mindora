@@ -1,44 +1,116 @@
 /* ====================================================
-   MINDORA — apps-script/Code.gs  (v4)
+   MINDORA — apps-script/Code.gs  (v5)
 
    SETUP (first time only)
    1. Create a new Google Sheet.
    2. Extensions → Apps Script. Delete default code, paste this.
-   3. Run setup() from the editor — approve permissions.
-   4. Deploy → New deployment → Web app
+   3. Set ADMIN_EMAIL and APP_URL below.
+   4. Run setup() from the editor — approve permissions.
+      (Also approves MailApp permission for email notifications)
+   5. Deploy → New deployment → Web app
         Execute as: Me  |  Who has access: Anyone
-   5. Copy the Web App URL → paste into js/config.js
+   6. Copy the Web App URL → paste into js/config.js
 
-   IMPORTANT: every time you change this file, you MUST:
-     Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy
-   Saving the script does NOT update the live deployment.
+   EMAIL NOTIFICATIONS
+   ─────────────────────────────────────────────────
+   • Admin gets emailed when a new profile is registered.
+   • Users get emailed when their profile is approved
+     (only if they provided their email at registration).
+   • All emails are sent from YOUR Google account
+     (the one that owns this Apps Script).
+   • Set ADMIN_EMAIL below to your email address.
+   • Set APP_URL to your deployed Mindora URL.
    ==================================================== */
 
+// ── Configuration ─────────────────────────────────────
+// Set these before running setup() for the first time.
+
+var ADMIN_EMAIL = 'your-admin@email.com'; // ← change this to your email
+var APP_URL     = 'https://yourdomain.github.io/mindora/'; // ← change to your deployed URL
+
+// ── Sheet names ────────────────────────────────────────
 var SHEET_PROFILES = 'Profiles';
 var SHEET_MOOD     = 'MoodEntries';
 var SHEET_LOGS     = 'ExerciseLogs';
+
+// ── Email helpers ──────────────────────────────────────
+
+function sendAdminNotification(name, email, timestamp){
+  if(!ADMIN_EMAIL || ADMIN_EMAIL === 'your-admin@email.com') return;
+  try{
+    var body =
+      'A new Mindora profile is waiting for your approval.\n\n' +
+      'Name: ' + name + '\n' +
+      (email ? 'Email: ' + email + '\n' : 'Email: not provided\n') +
+      'Registered: ' + (timestamp || new Date().toLocaleString()) + '\n\n' +
+      'Log in to approve:\n' + APP_URL + 'admin.html\n\n' +
+      '— Mindora';
+    MailApp.sendEmail({
+      to: ADMIN_EMAIL,
+      subject: '🌿 Mindora — New profile awaiting approval: ' + name,
+      body: body
+    });
+  }catch(e){
+    // Don't let email failure break the profile creation
+    console.log('Admin email failed: ' + e);
+  }
+}
+
+function sendApprovalNotification(name, email){
+  if(!email) return;
+  try{
+    var body =
+      'Hi ' + name + ',\n\n' +
+      'Your Mindora profile has been approved! You can now log in.\n\n' +
+      APP_URL + '\n\n' +
+      'Your name: ' + name + '\n' +
+      'Use the PIN you set when registering.\n\n' +
+      'Take care of yourself,\n' +
+      '— Mindora\n\n' +
+      '─────────────────────────────\n' +
+      'This is an automated message. Your data stays on your device or in your private Google Sheet — it is never sent to us.';
+    MailApp.sendEmail({
+      to: email,
+      subject: '✨ Your Mindora profile has been approved',
+      body: body
+    });
+  }catch(e){
+    console.log('User approval email failed: ' + e);
+  }
+}
+
+function sendWeeklySummaryEmail(profileId, name, email, summaryText){
+  if(!email) return;
+  try{
+    MailApp.sendEmail({
+      to: email,
+      subject: '📊 Your Mindora weekly summary',
+      body: 'Hi ' + name + ',\n\nHere is your weekly wellbeing summary:\n\n' + summaryText + '\n\nKeep checking in,\n— Mindora\n\n' + APP_URL
+    });
+  }catch(e){
+    console.log('Weekly summary email failed: ' + e);
+  }
+}
 
 // ── Setup ─────────────────────────────────────────────
 
 function setup(){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // Profiles sheet — adds 'status' column if missing
+  // Profiles sheet — columns: profileId|name|pin|settingsJson|createdAt|status|email
   var p = ss.getSheetByName(SHEET_PROFILES);
   if(!p){
     p = ss.insertSheet(SHEET_PROFILES);
-    p.appendRow(['profileId','name','pin','settingsJson','createdAt','status']);
+    p.appendRow(['profileId','name','pin','settingsJson','createdAt','status','email']);
   } else {
-    // Ensure status header exists in col F
-    if(!p.getRange(1,6).getValue()){
-      p.getRange(1,6).setValue('status');
-    }
-    // Back-fill status for rows that have no value in col F
+    // Ensure status header in col F
+    if(!p.getRange(1,6).getValue()) p.getRange(1,6).setValue('status');
+    // Ensure email header in col G
+    if(!p.getRange(1,7).getValue()) p.getRange(1,7).setValue('email');
+    // Back-fill status for rows with no value
     var d = p.getDataRange().getValues();
     for(var i=1;i<d.length;i++){
-      if(!d[i][5]){
-        p.getRange(i+1,6).setValue('approved');
-      }
+      if(!d[i][5]) p.getRange(i+1,6).setValue('approved');
     }
   }
 
@@ -78,6 +150,7 @@ function doGet(e){
       case 'saveSettings':   result = saveSettings(e.parameter.profileId, JSON.parse(e.parameter.payload)); break;
       case 'clearData':      result = clearData(e.parameter.profileId); break;
       case 'debugSheet':     result = debugSheet(); break;
+      case 'resendApprovalEmail': result = resendApprovalEmail(e.parameter.profileId); break;
       default: result = { error: 'UNKNOWN_ACTION: ' + action };
     }
   }catch(err){
@@ -135,10 +208,9 @@ function findProfileById(profileId){
 }
 
 // Convert a raw sheet row to a safe profile object
-// Handles missing status column (older sheets)
+// Handles missing status/email columns (older sheets)
 function rowToProfile(row, rowIndex){
   var status = row.length > 5 ? String(row[5] || '') : '';
-  // Handle GAS date-formatting of empty cells → they become '' or 0
   if(!status || status === '0' || status === 'NaN') status = 'approved';
   return {
     rowIndex:    rowIndex,
@@ -146,21 +218,21 @@ function rowToProfile(row, rowIndex){
     name:        String(row[1] || ''),
     pin:         String(row[2] || ''),
     settingsJson: String(row[3] || '{}'),
-    status:      status
+    status:      status,
+    email:       row.length > 6 ? String(row[6] || '') : ''
   };
 }
 
 // ── Profile actions ───────────────────────────────────
 
-function createProfile(name, pin, asAdmin){
-  name = (name || '').trim();
+function createProfile(name, pin, asAdmin, email){
+  name  = (name  || '').trim();
+  email = (email || '').trim().toLowerCase();
   if(!name)              return { error: 'NAME_REQUIRED' };
   if(!pin || String(pin).length < 4) return { error: 'PIN_TOO_SHORT' };
 
   var existing = findProfileRow(name);
   if(existing){
-    // Tell the client the status of the existing profile
-    // so it can give a more helpful message
     return { error: 'NAME_TAKEN', existingStatus: existing.status };
   }
 
@@ -168,7 +240,15 @@ function createProfile(name, pin, asAdmin){
   var profileId = Utilities.getUuid();
   var settings  = defaultSettings(name, 'en');
   var status    = asAdmin ? 'approved' : 'pending';
-  sheet.appendRow([profileId, name, String(pin), JSON.stringify(settings), new Date().toISOString(), status]);
+
+  // Store email in col G (index 6)
+  sheet.appendRow([profileId, name, String(pin), JSON.stringify(settings), new Date().toISOString(), status, email]);
+
+  // Notify admin (remote-mode only, non-blocking)
+  if(!asAdmin){
+    sendAdminNotification(name, email, new Date().toLocaleString());
+  }
+
   return { profileId: profileId, name: name, status: status };
 }
 
@@ -189,14 +269,13 @@ function listProfiles(){
 
   for(var i=1; i<data.length; i++){
     var row = data[i];
-    // Skip blank rows
     if(!row[0] && !row[1]) continue;
     var p = rowToProfile(row, i+1);
-    // Only return fields needed by the admin — never return the PIN
     profiles.push({
       profileId: p.profileId,
       name:      p.name,
-      status:    p.status
+      status:    p.status,
+      email:     p.email || ''  // include email so admin can see/resend notifications
     });
   }
 
@@ -208,7 +287,14 @@ function setProfileStatus(profileId, status){
   var data  = sheet.getDataRange().getValues();
   for(var i=1; i<data.length; i++){
     if(String(data[i][0]) === String(profileId)){
+      var wasNotApproved = String(data[i][5] || '') !== 'approved';
       sheet.getRange(i+1, 6).setValue(status);
+      // Send approval email if the user provided one
+      if(status === 'approved' && wasNotApproved){
+        var uname = String(data[i][1] || '');
+        var uemail = String(data[i][6] || '');
+        if(uemail) sendApprovalNotification(uname, uemail);
+      }
       return { ok: true };
     }
   }
@@ -256,20 +342,76 @@ function debugSheet(){
     var data  = sheet.getDataRange().getValues();
     var rows  = [];
     for(var i=0; i<Math.min(data.length, 10); i++){
-      var row = data[i].slice(); // copy
-      if(i > 0) row[2] = '***'; // hide PIN
+      var row = data[i].slice();
+      if(i > 0){ row[2] = '***'; } // hide PIN
       rows.push(row.map(String));
     }
     return {
-      sheetName:     SHEET_PROFILES,
-      totalRows:     data.length,
-      headerRow:     data[0] ? data[0].map(String) : [],
-      previewRows:   rows,
-      hasStatusCol:  data[0] ? data[0].length >= 6 : false
+      sheetName:    SHEET_PROFILES,
+      totalRows:    data.length,
+      headerRow:    data[0] ? data[0].map(String) : [],
+      previewRows:  rows,
+      hasStatusCol: data[0] ? data[0].length >= 6 : false,
+      hasEmailCol:  data[0] ? data[0].length >= 7 : false,
+      adminEmail:   ADMIN_EMAIL,
+      appUrl:       APP_URL
     };
   }catch(err){
     return { error: String(err) };
   }
+}
+
+// Manually resend the approval email — useful if the user didn't receive it
+function resendApprovalEmail(profileId){
+  var p = findProfileById(profileId);
+  if(!p) return { error: 'PROFILE_NOT_FOUND' };
+  if(!p.email) return { error: 'NO_EMAIL', message: 'This profile has no email address on file.' };
+  if(p.status !== 'approved') return { error: 'NOT_APPROVED', message: 'Profile is not yet approved.' };
+  sendApprovalNotification(p.name, p.email);
+  return { ok: true, sentTo: p.email };
+}
+
+// Weekly summary trigger — run this from Apps Script Triggers (Time-driven, weekly)
+function weeklyDigestTrigger(){
+  try{
+    var sheet = getProfileSheet();
+    var data  = sheet.getDataRange().getValues();
+    for(var i=1; i<data.length; i++){
+      var p = rowToProfile(data[i], i+1);
+      if(p.status !== 'approved' || !p.email) continue;
+      var summary = buildWeeklySummary(p.profileId);
+      if(summary) sendWeeklySummaryEmail(p.profileId, p.name, p.email, summary);
+    }
+  }catch(e){
+    console.log('Weekly digest error: ' + e);
+  }
+}
+
+function buildWeeklySummary(profileId){
+  var moodSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MOOD);
+  if(!moodSheet) return null;
+  var data = moodSheet.getDataRange().getValues();
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  var cutoffStr = Utilities.formatDate(cutoff, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+  var moods = [];
+  for(var i=1; i<data.length; i++){
+    if(String(data[i][0]) !== String(profileId)) continue;
+    if(String(data[i][1]) < cutoffStr) continue;
+    moods.push(Number(data[i][2] || 0));
+  }
+
+  if(!moods.length) return null;
+  var avg = (moods.reduce(function(a,b){ return a+b; }, 0) / moods.length).toFixed(1);
+  var best = Math.max.apply(null, moods);
+  var worst = Math.min.apply(null, moods);
+
+  return 'Check-ins this week: ' + moods.length + '\n' +
+    'Average mood: ' + avg + '/10\n' +
+    'Best day: ' + best + '/10\n' +
+    'Lowest day: ' + worst + '/10\n\n' +
+    'Keep it up — consistency is what matters most.';
 }
 
 // ── Data storage ──────────────────────────────────────

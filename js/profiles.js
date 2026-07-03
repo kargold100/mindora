@@ -61,13 +61,12 @@ const Profiles = (function(){
 
   // ── Public: app-side actions ──────────────────────
 
-  async function selfRegister(name, pin){
-    name = (name||'').trim();
+  async function selfRegister(name, pin, email){
+    name  = (name||'').trim();
+    email = (email||'').trim().toLowerCase();
     if(isRemoteMode()){
-      const res = await Api.call('createProfile', { name, pin });
+      const res = await Api.call('createProfile', { name, pin, email });
       if(res && res.error){
-        // If the name is taken AND the existing profile is pending,
-        // tell the user their profile is already awaiting approval
         if(res.error === 'NAME_TAKEN' && res.existingStatus === 'pending'){
           throw new Error('ALREADY_PENDING');
         }
@@ -75,7 +74,7 @@ const Profiles = (function(){
       }
       return { profileId: res.profileId, name: res.name, status: 'pending' };
     }
-    // Local mode — same logic
+    // Local mode — email stored locally, no server to send from
     const profiles = getLocalProfiles();
     const existing = profiles.find(p => p.name.toLowerCase() === name.toLowerCase());
     if(existing){
@@ -83,6 +82,12 @@ const Profiles = (function(){
       throw new Error('NAME_TAKEN');
     }
     const res = createLocalProfile(name, pin, 'pending');
+    // Store email locally for reference (can't send notifications in local mode)
+    if(email){
+      const list = getLocalProfiles();
+      const idx = list.findIndex(p => p.id === res.id);
+      if(idx !== -1){ list[idx].email = email; Storage._write(LOCAL_PROFILES, list); }
+    }
     return { profileId: res.id, name: res.name, status: 'pending' };
   }
 

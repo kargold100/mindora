@@ -92,6 +92,7 @@
     Goals.renderTodaySummary();
     Habits.renderTodaySummary();
     Wellness.render();
+    TipsDaily.render();
   }
 
   // Exposed so habits.js can trigger a today refresh on quick-toggle
@@ -353,6 +354,9 @@
     const errEl = document.getElementById('profileError');
     errEl.classList.add('hidden');
     errEl.classList.remove('info');
+    // Show email field only in create mode (and only hint about notifications in remote mode)
+    const emailWrap = document.getElementById('profileEmailWrap');
+    if(emailWrap) emailWrap.classList.toggle('hidden', mode !== 'create');
     if(mode === 'create'){
       document.getElementById('profileSubmitBtn').textContent = I18n.t('profile_create_btn');
       document.getElementById('profileToggleBtn').textContent = I18n.t('profile_toggle_to_login');
@@ -361,7 +365,6 @@
       document.getElementById('profileToggleBtn').textContent = I18n.t('profile_toggle_to_create');
     }
   }
-
   function showProfileError(key, vars){
     const el = document.getElementById('profileError');
     el.classList.remove('info');
@@ -397,8 +400,9 @@
   }
 
   async function handleProfileSubmit(){
-    const name = document.getElementById('profileNameInput').value.trim();
-    const pin = document.getElementById('profilePinInput').value.trim();
+    const name  = document.getElementById('profileNameInput').value.trim();
+    const pin   = document.getElementById('profilePinInput').value.trim();
+    const email = (document.getElementById('profileEmailInput')?.value || '').trim();
     document.getElementById('profileError').classList.add('hidden');
 
     if(!name){ showProfileError('profile_error_notfound'); return; }
@@ -411,7 +415,7 @@
 
     try{
       if(profileMode === 'create'){
-        await Profiles.selfRegister(name, pin);
+        await Profiles.selfRegister(name, pin, email);
         document.getElementById('profilePinInput').value = '';
         setProfileMode('login');
         showProfileInfo('profile_pending_approval');

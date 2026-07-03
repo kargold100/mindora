@@ -1030,3 +1030,30 @@ select.select-input{ color:var(--text); }
 [data-fontsize="xl"]     body{ font-size:20px; }
 [data-fontsize="large"]  .mood-slider-labels,
 [data-fontsize="xl"]     .mood-slider-labels{ font-size:.82rem; }
+
+/* ── Daily tips card ─────────────────────────────── */
+.daily-tip-section{
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.daily-tip-section:last-child{ border-bottom:none; padding-bottom:0; }
+.daily-tip-section:first-child{ padding-top:0; }
+.daily-tip-section.insight{ border-left:none; }
+.daily-tip-section.prompt .daily-tip-text{ font-style:italic; }
+.daily-tip-label{
+  font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--dusk); margin-bottom:5px;
+}
+.daily-tip-text{ font-size:.88rem; line-height:1.65; color:var(--text-muted); }
+
+/* ── Admin email sub-info ─────────────────────────── */
+.admin-profile-email{
+  font-size:.72rem; color:var(--text-faint); font-family:var(--font-mono);
+  margin-top:2px; display:block;
+}
+.admin-action-btn.resend-btn{
+  color:var(--dusk); border-color:rgba(101,104,168,0.3); background:var(--dusk-faint);
+}
+
+/* ── Profile email field ─────────────────────────── */
+#profileEmailWrap{ margin-top:6px; }
