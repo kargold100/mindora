@@ -56,6 +56,11 @@
     if(name === 'goals'){ Goals.render(); }
     if(name === 'habits'){ Habits.render(); Goals.render(); }
     if(name === 'journal') renderJournalScreen();
+    if(name === 'tools') renderToolsScreen();
+    if(name === 'assessments') Assessments.render();
+    if(name === 'resources') Resources.render();
+    if(name === 'more'){} // just shows the grid, no render needed
+    if(name === 'checkin'){ Mood.openForm(Storage.getTodayEntry() || {}); }
     window.scrollTo(0,0);
   }
 
@@ -93,6 +98,7 @@
     Habits.renderTodaySummary();
     Wellness.render();
     TipsDaily.render();
+    Quotes.renderTodayCards();
   }
 
   // Exposed so habits.js can trigger a today refresh on quick-toggle
@@ -182,6 +188,62 @@
   function applyTheme(theme){
     document.documentElement.setAttribute('data-theme', theme);
     if(document.getElementById('screen-trends').classList.contains('active')) Trends.renderAll();
+  }
+
+  let toolsTab = 'breathing';
+
+  function renderToolsScreen(){
+    const TABS = {
+      breathing:   'breathingTools',
+      mindfulness: 'mindfulnessContent',
+      cbt:         'cbtContent',
+      grounding:   'groundingContent',
+      boosters:    'moodBoostersContent',
+    };
+
+    // Show only the active panel
+    Object.values(TABS).forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.classList.toggle('hidden', TABS[toolsTab] !== id);
+    });
+
+    // Render the active panel
+    switch(toolsTab){
+      case 'breathing':
+        Breathing.renderAll();
+        break;
+      case 'mindfulness':
+        Mindfulness.render();
+        break;
+      case 'cbt':
+        CBT.render();
+        break;
+      case 'grounding': {
+        const g = document.getElementById('groundingContent');
+        if(g) g.innerHTML = Breathing.renderGroundingCards();
+        break;
+      }
+      case 'boosters':
+        MoodBoosters.render();
+        break;
+    }
+  }
+
+  function initToolsTabs(){
+    document.querySelectorAll('#toolsTabs .range-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('#toolsTabs .range-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-pressed','false'); });
+        tab.classList.add('active'); tab.setAttribute('aria-pressed','true');
+        toolsTab = tab.getAttribute('data-toolstab');
+        renderToolsScreen();
+      });
+    });
+  }
+
+  function initMoreGrid(){
+    document.querySelectorAll('.more-card[data-screen]').forEach(btn => {
+      btn.addEventListener('click', () => goToScreen(btn.getAttribute('data-screen')));
+    });
   }
 
   function renderJournalScreen(){
@@ -642,6 +704,9 @@
         renderLearnScreen();
       });
     });
+
+    initToolsTabs();
+    initMoreGrid();
 
     // Crisis banner controls
     document.getElementById('crisisCollapse').addEventListener('click', () => {

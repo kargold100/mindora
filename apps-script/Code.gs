@@ -25,8 +25,37 @@
 // ── Configuration ─────────────────────────────────────
 // Set these before running setup() for the first time.
 
-var ADMIN_EMAIL = 'your-admin@email.com'; // ← change this to your email
-var APP_URL     = 'https://yourdomain.github.io/mindora/'; // ← change to your deployed URL
+// ── Email configuration ────────────────────────────
+//
+// ADMIN_EMAIL — the address that receives notifications when
+//   a new profile is registered. Set to your email address.
+//
+// APP_URL — the full URL of your deployed Mindora site.
+//   Used in email links.
+//
+// SENDER_NAME — the display name recipients see in their inbox.
+//   Recipients see:  Mindora <your-google-account@gmail.com>
+//   The actual FROM address is always the Google account that
+//   owns this Apps Script deployment — that can't be changed
+//   without a third-party SMTP service.
+//
+// ── Want a completely separate sender address? ──────
+// Option A (free, 5 minutes):
+//   1. Create a new Google account: mindora.notify@gmail.com
+//   2. Log into that account and deploy THIS Apps Script from it.
+//   3. Recipients will see: Mindora <mindora.notify@gmail.com>
+//   4. All other setup steps remain identical.
+//
+// Option B (if you own a domain):
+//   1. In Gmail settings → Accounts → "Send mail as" add
+//      noreply@yourdomain.com as a "Send as" alias.
+//   2. Replace MailApp.sendEmail with GmailApp.sendEmail and
+//      add the `from` field set to that alias.
+// ────────────────────────────────────────────────────
+
+var ADMIN_EMAIL  = 'kargold100@yahoo.com';          // ← change this
+var APP_URL      = 'https://kargold100.github.io/mindora/'; // ← change this
+var SENDER_NAME  = 'Mindora';                        // display name in inbox
 
 // ── Sheet names ────────────────────────────────────────
 var SHEET_PROFILES = 'Profiles';
@@ -40,19 +69,24 @@ function sendAdminNotification(name, email, timestamp){
   try{
     var body =
       'A new Mindora profile is waiting for your approval.\n\n' +
-      'Name: ' + name + '\n' +
-      (email ? 'Email: ' + email + '\n' : 'Email: not provided\n') +
+      'Name:       ' + name + '\n' +
+      'Email:      ' + (email || '(not provided)') + '\n' +
       'Registered: ' + (timestamp || new Date().toLocaleString()) + '\n\n' +
-      'Log in to approve:\n' + APP_URL + 'admin.html\n\n' +
-      '— Mindora';
+      'Approve or manage profiles:\n' +
+      APP_URL + 'admin.html\n\n' +
+      '────────────────────────────────────────\n' +
+      'This is an automated notification from Mindora.\n' +
+      'Please do not reply to this email.';
+
     MailApp.sendEmail({
-      to: ADMIN_EMAIL,
-      subject: '🌿 Mindora — New profile awaiting approval: ' + name,
-      body: body
+      to:      ADMIN_EMAIL,
+      name:    SENDER_NAME,                   // ← shows as "Mindora" in inbox
+      subject: '[Mindora] New profile awaiting approval: ' + name,
+      body:    body,
+      noReply: true                            // ← marks as no-reply header
     });
   }catch(e){
-    // Don't let email failure break the profile creation
-    console.log('Admin email failed: ' + e);
+    console.log('Admin notification email failed: ' + e);
   }
 }
 
@@ -61,31 +95,49 @@ function sendApprovalNotification(name, email){
   try{
     var body =
       'Hi ' + name + ',\n\n' +
-      'Your Mindora profile has been approved! You can now log in.\n\n' +
+      'Great news — your Mindora profile has been approved.\n' +
+      'You can now sign in using your name and the PIN you chose.\n\n' +
+      'Open Mindora:\n' +
       APP_URL + '\n\n' +
-      'Your name: ' + name + '\n' +
-      'Use the PIN you set when registering.\n\n' +
-      'Take care of yourself,\n' +
-      '— Mindora\n\n' +
-      '─────────────────────────────\n' +
-      'This is an automated message. Your data stays on your device or in your private Google Sheet — it is never sent to us.';
+      'If you didn\'t request this account, you can ignore this message.\n\n' +
+      '────────────────────────────────────────\n' +
+      'This is an automated message from Mindora.\n' +
+      'Please do not reply — this address is not monitored.\n\n' +
+      'Your data stays on your device or in a private Google Sheet\n' +
+      'that only you control. It is never shared or sold.';
+
     MailApp.sendEmail({
-      to: email,
-      subject: '✨ Your Mindora profile has been approved',
-      body: body
+      to:      email,
+      name:    SENDER_NAME,
+      subject: '[Mindora] Your profile has been approved',
+      body:    body,
+      noReply: true
     });
   }catch(e){
-    console.log('User approval email failed: ' + e);
+    console.log('Approval email failed: ' + e);
   }
 }
 
 function sendWeeklySummaryEmail(profileId, name, email, summaryText){
   if(!email) return;
   try{
+    var body =
+      'Hi ' + name + ',\n\n' +
+      'Here\'s your Mindora weekly wellbeing summary:\n\n' +
+      summaryText + '\n\n' +
+      'Keep checking in — consistency matters more than any single day.\n\n' +
+      'Open Mindora:\n' +
+      APP_URL + '\n\n' +
+      '────────────────────────────────────────\n' +
+      'This is an automated weekly digest from Mindora.\n' +
+      'To stop receiving these, ask your admin to remove your email address.';
+
     MailApp.sendEmail({
-      to: email,
-      subject: '📊 Your Mindora weekly summary',
-      body: 'Hi ' + name + ',\n\nHere is your weekly wellbeing summary:\n\n' + summaryText + '\n\nKeep checking in,\n— Mindora\n\n' + APP_URL
+      to:      email,
+      name:    SENDER_NAME,
+      subject: '[Mindora] Your weekly wellbeing summary',
+      body:    body,
+      noReply: true
     });
   }catch(e){
     console.log('Weekly summary email failed: ' + e);

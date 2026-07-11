@@ -154,7 +154,8 @@ const Storage = (function(){
       water:      (entry.water      == null || entry.water === '') ? null : Number(entry.water),
       food:       entry.food      || null,
       screenTime: (entry.screenTime === undefined) ? null : entry.screenTime,
-      triggers:   Array.isArray(entry.triggers)  ? entry.triggers  : [],
+      triggers:   Array.isArray(entry.triggers)    ? entry.triggers   : [],
+      activities: Array.isArray(entry.activities)  ? entry.activities : [],
       gratitude:  Array.isArray(entry.gratitude) ? entry.gratitude : [null,null,null],
       dailyWins:  entry.dailyWins || null,
       timestamp: Date.now()

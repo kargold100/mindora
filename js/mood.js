@@ -12,11 +12,21 @@
 const Mood = (function(){
 
   const EMOJIS = [
-    { value:2, face:'😢', key:'emoji_label_1' },
-    { value:4, face:'😞', key:'emoji_label_2' },
-    { value:6, face:'😐', key:'emoji_label_3' },
-    { value:8, face:'🙂', key:'emoji_label_4' },
-    { value:10, face:'😄', key:'emoji_label_5' }
+    // Positive
+    { id:'happy',      value:9,  face:'😊', key:'mood_happy',      valence:'positive' },
+    { id:'calm',       value:8,  face:'😌', key:'mood_calm',       valence:'positive' },
+    { id:'content',    value:7,  face:'🙂', key:'mood_content',    valence:'positive' },
+    { id:'grateful',   value:8,  face:'🥰', key:'mood_grateful',   valence:'positive' },
+    { id:'confident',  value:8,  face:'😎', key:'mood_confident',  valence:'positive' },
+    // Neutral
+    { id:'neutral',    value:5,  face:'😐', key:'mood_neutral',    valence:'neutral'  },
+    // Negative
+    { id:'tired',      value:4,  face:'😴', key:'mood_tired',      valence:'negative' },
+    { id:'anxious',    value:3,  face:'😟', key:'mood_anxious',    valence:'negative' },
+    { id:'sad',        value:3,  face:'😢', key:'mood_sad',        valence:'negative' },
+    { id:'angry',      value:3,  face:'😡', key:'mood_angry',      valence:'negative' },
+    { id:'overwhelmed',value:2,  face:'😨', key:'mood_overwhelmed',valence:'negative' },
+    { id:'lonely',     value:3,  face:'😞', key:'mood_lonely',     valence:'negative' },
   ];
 
   const TAGS = [
@@ -25,13 +35,15 @@ const Mood = (function(){
     'lonely','irritable'
   ];
 
-  const TRIGGERS  = ['work','family','health','money','sleep','relationships'];
+  const TRIGGERS   = ['work','family','health','money','sleep','relationships'];
+  const ACTIVITIES = ['work','family','exercise','friends','study','travel','financial','relationships','health','weather'];
   const FOOD_OPTS = ['healthy','average','poor','skipped'];
   const WEATHER   = ['sunny','cloudy','rainy','hot','cold'];
   const SOCIAL    = ['alone','family','friends','work'];
 
-  let selectedTriggers = [];
-  let selectedFood     = null;
+  let selectedTriggers  = [];
+  let selectedActivities = [];
+  let selectedFood      = null;
   const APPETITE = ['normal','less','more','skipped'];
 
   let selectedTags    = [];
@@ -127,6 +139,26 @@ const Mood = (function(){
           ? selectedTags = selectedTags.filter(x => x !== t)
           : selectedTags.push(t);
         renderTagChips();
+      });
+    });
+  }
+
+  function renderActivityChips(){
+    const wrap = document.getElementById('activityChips');
+    if(!wrap) return;
+    if(!selectedActivities) selectedActivities = [];
+    wrap.innerHTML = ACTIVITIES.map(k => `
+      <button type="button" class="chip ${selectedActivities.includes(k)?'selected':''}" data-activity="${k}">
+        ${I18n.t('activity_'+k)}
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-activity]').forEach(b => {
+      b.addEventListener('click', () => {
+        const k = b.getAttribute('data-activity');
+        selectedActivities.includes(k)
+          ? selectedActivities = selectedActivities.filter(x=>x!==k)
+          : selectedActivities.push(k);
+        renderActivityChips();
       });
     });
   }
@@ -267,8 +299,9 @@ const Mood = (function(){
     const journalEl = document.getElementById('journalInput');
     if(journalEl) journalEl.value = pf.journal || '';
 
-    selectedTriggers = pf.triggers ? pf.triggers.slice() : [];
-    selectedFood     = pf.food || null;
+    selectedTriggers   = pf.triggers   ? pf.triggers.slice()   : [];
+    selectedActivities = pf.activities ? pf.activities.slice() : [];
+    selectedFood       = pf.food || null;
 
     // Water field
     const waterEl = document.getElementById('waterInput');
@@ -291,6 +324,7 @@ const Mood = (function(){
     renderSocialChips();
     renderTagChips();
     renderTriggerChips();
+    renderActivityChips();
     renderFoodChips();
     renderAppetiteChips();
     renderOrb(selectedEmoji);
@@ -338,6 +372,7 @@ const Mood = (function(){
       food:        selectedFood,
       screenTime:  (() => { const el = document.getElementById('screenTimeSlider'); return el ? Number(el.value) : null; })(),
       triggers:    selectedTriggers.slice(),
+      activities:  selectedActivities.slice(),
       gratitude:   [0,1,2].map(i => { const el = document.getElementById('gratitude'+i); return el ? (el.value.trim()||null) : null; }),
       dailyWins:   (document.getElementById('dailyWinsInput')?.value||'').trim()||null
     };
@@ -424,9 +459,9 @@ const Mood = (function(){
   }
 
   return {
-    TAGS, WEATHER, SOCIAL, APPETITE, EMOJIS,
+    TAGS, WEATHER, SOCIAL, APPETITE, EMOJIS, ACTIVITIES,
     renderEmojiPicker, renderWeatherChips, renderSocialChips,
-    renderTagChips, renderAppetiteChips,
+    renderTagChips, renderAppetiteChips, renderTriggerChips, renderActivityChips,
     moodColor, renderOrb, moodDescriptor,
     openForm, readForm, renderTodayCard,
     greetingForHour, setMoreQuestionsExpanded

@@ -172,7 +172,7 @@ h3{ font-size:1.02rem; margin-bottom:10px; }
 .icon-btn:hover{ background:var(--bg-card-2); }
 
 /* ── Screens ─────────────────────────────────────── */
-main#screens{ flex:1; padding:4px 18px 110px; }
+main#screens{ flex:1; padding:4px 18px calc(110px + env(safe-area-inset-bottom)); }
 .screen{ display:none; animation:fadeUp var(--duration-base) var(--ease-out); }
 .screen.active{ display:block; }
 @keyframes fadeUp{
@@ -288,11 +288,11 @@ main#screens{ flex:1; padding:4px 18px 110px; }
 .field-label:first-child{ margin-top:0; }
 
 input[type="text"], input[type="number"], input[type="password"],
-input[type="time"], textarea, select.select-input{
+input[type="time"], input[type="email"], textarea, select.select-input{
   width:100%; padding:11px 13px;
   background:var(--bg-card-2); color:var(--text);
   border:1px solid var(--border-2); border-radius:var(--r-md);
-  font-size:.96rem; line-height:1.5;
+  font-size:16px; line-height:1.5;
   transition:border-color var(--duration-base) ease,
               box-shadow var(--duration-base) ease;
 }
@@ -435,7 +435,7 @@ select.select-input{ color:var(--text); }
 .checkin-step-hint{ display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:12px; }
 
 /* ── Emoji picker ────────────────────────────────── */
-.emoji-picker{ display:flex; justify-content:space-between; gap:5px; padding:4px 0 8px; }
+.emoji-picker{ display:grid; grid-template-columns:repeat(6,1fr); gap:7px; padding:4px 0 8px; }
 .emoji-btn{
   flex:1; padding:10px 4px 8px;
   background:var(--bg-card-2); border:2px solid transparent;
@@ -456,9 +456,9 @@ select.select-input{ color:var(--text); }
 .emoji-btn.selected .emoji-label{ color:var(--dusk); }
 
 /* ── Range/tab picker ────────────────────────────── */
-.range-tabs{ display:flex; gap:6px; margin-bottom:12px; }
+.range-tabs{ display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; padding-bottom:2px; }
 .range-tab{
-  flex:1; padding:9px 0; font-weight:600; font-size:.82rem;
+  flex:0 0 auto; padding:9px 12px; font-weight:600; font-size:.82rem; white-space:nowrap;
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-muted);
   border-radius:999px;
   transition:all var(--duration-base) ease;
@@ -1057,3 +1057,352 @@ select.select-input{ color:var(--text); }
 
 /* ── Profile email field ─────────────────────────── */
 #profileEmailWrap{ margin-top:6px; }
+
+/* ══ More screen grid ════════════════════════════════ */
+.more-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+}
+.more-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:18px 8px; display:flex; flex-direction:column; align-items:center; gap:8px;
+  transition:transform var(--duration-fast) var(--ease-spring), background var(--duration-base) ease;
+}
+.more-card:active{ transform:scale(0.93); }
+.more-card:hover{ background:var(--bg-card-2); }
+.more-icon{ font-size:1.6rem; line-height:1; }
+.more-label{ font-size:.7rem; font-weight:600; color:var(--text-muted); text-align:center; }
+
+/* ══ Assessments ══════════════════════════════════════ */
+.assess-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-xl);
+  padding:16px; margin-bottom:10px;
+}
+.assess-card-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px; }
+.assess-card-title{ font-size:.94rem; font-weight:600; }
+.assess-card-desc{ font-size:.82rem; }
+.assess-badge{
+  flex-shrink:0; font-size:.66rem; font-weight:700; padding:3px 9px;
+  border-radius:999px; text-transform:uppercase; letter-spacing:.03em;
+}
+.assess-last-taken{ font-size:.74rem; color:var(--text-faint); margin:2px 0 0; }
+.assess-progress-bar-bg{
+  width:100%; height:6px; background:var(--bg-card-2); border-radius:999px;
+  overflow:hidden; margin-bottom:12px;
+}
+.assess-progress-bar-fill{
+  height:100%; background:linear-gradient(90deg,var(--dusk),var(--bloom));
+  border-radius:999px; transition:width .3s ease;
+}
+.assess-q-counter{ font-size:.76rem; color:var(--text-faint); margin-bottom:8px; }
+.assess-question{ font-size:.96rem; line-height:1.6; font-weight:600; margin-bottom:16px; }
+.assess-options{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.assess-option-btn{
+  padding:12px 16px; border-radius:var(--r-md); text-align:left;
+  background:var(--bg-card-2); border:1.5px solid var(--border-2); color:var(--text);
+  font-size:.88rem; transition:all .15s ease;
+}
+.assess-option-btn.selected{ border-color:var(--dusk); background:var(--dusk-faint); color:var(--text); }
+.assess-nav-row{ display:flex; justify-content:space-between; gap:10px; }
+.assess-score-ring{
+  width:110px; height:110px; border-radius:50%; border:5px solid;
+  display:flex; align-items:center; justify-content:center;
+  margin:16px auto; font-family:var(--font-mono);
+}
+.assess-score-num{ font-size:1.8rem; font-weight:700; }
+.assess-band-label{ text-align:center; font-weight:700; font-size:1.05rem; margin-bottom:10px; }
+.assess-support-note{
+  background:var(--bloom-faint); border:1px solid rgba(200,123,104,0.3);
+  color:var(--bloom); border-radius:var(--r-md); padding:10px 12px;
+  font-size:.84rem; margin-bottom:10px; line-height:1.5;
+}
+.assess-suggestions{ margin-bottom:14px; }
+.assess-suggestions-title{ font-weight:700; font-size:.84rem; margin-bottom:8px; }
+.assess-suggestion-item{
+  font-size:.84rem; color:var(--text-muted); margin-bottom:6px; line-height:1.5;
+}
+.assess-disclaimer{ font-size:.74rem; margin-top:10px; line-height:1.5; }
+.assess-result-header{ margin-bottom:12px; }
+.assess-result-header h3{ font-size:.82rem; color:var(--text-faint); margin-bottom:2px; }
+
+/* ══ Resources ════════════════════════════════════════ */
+.resource-disclaimer-banner{
+  background:var(--bloom-faint); border:1px solid rgba(200,123,104,0.25);
+  border-radius:var(--r-md); padding:10px 14px; margin-bottom:14px;
+  font-size:.82rem; color:var(--bloom); line-height:1.5;
+}
+.resource-section{ margin-bottom:20px; }
+.resource-section-title{
+  font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--text-faint); margin-bottom:8px;
+}
+.crisis-title{ color:var(--bloom); }
+.resource-card{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:14px; margin-bottom:8px;
+}
+.resource-card.urgent{ border-color:rgba(200,123,104,0.5); background:rgba(200,123,104,0.06); }
+.resource-card-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:4px; }
+.resource-name{ font-weight:600; font-size:.88rem; }
+.resource-country{ font-size:.68rem; background:var(--bg-card-2); padding:2px 7px; border-radius:999px; color:var(--text-muted); }
+.resource-desc{ font-size:.8rem; color:var(--text-muted); margin-bottom:4px; line-height:1.4; }
+.resource-hours{ font-size:.75rem; color:var(--moss); margin-bottom:6px; }
+.resource-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.resource-btn{
+  font-size:.78rem; font-weight:600; padding:7px 14px; border-radius:999px; text-decoration:none;
+  border:1px solid var(--border-2); color:var(--text);
+  transition:all .15s ease;
+}
+.resource-btn.call-btn{ background:var(--moss-faint); border-color:var(--moss); color:var(--moss); }
+.resource-btn.link-btn{ background:var(--dusk-faint); border-color:var(--dusk); color:var(--dusk); }
+
+/* ══ CBT ══════════════════════════════════════════════ */
+.distortion-card{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:14px; margin-bottom:8px;
+}
+.distortion-summary{
+  display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; list-style:none; gap:10px;
+}
+.distortion-summary::-webkit-details-marker{ display:none; }
+.distortion-name{ font-weight:600; font-size:.9rem; }
+.distortion-chevron{ color:var(--dusk); font-size:1.1rem; flex-shrink:0; }
+details[open] .distortion-chevron{ transform:rotate(45deg); }
+.distortion-body{ font-size:.85rem; color:var(--text-muted); margin-top:10px; line-height:1.5; }
+.distortion-example-box{
+  background:var(--bg-card-2); border-radius:var(--r-md); padding:10px 12px; margin-top:8px;
+}
+.distortion-example-label{ font-size:.72rem; font-weight:700; text-transform:uppercase; color:var(--text-faint); margin-bottom:4px; }
+.distortion-example{ font-size:.82rem; color:var(--text-muted); font-style:italic; line-height:1.5; }
+.cbt-form{ margin-bottom:14px; }
+.cbt-record-card{
+  background:var(--bg-card-2); border-radius:var(--r-md); padding:12px; margin-bottom:8px;
+}
+.cbt-record-date{ font-size:.72rem; color:var(--text-faint); margin-bottom:4px; }
+.cbt-record-thought{ font-size:.84rem; margin-bottom:4px; }
+.cbt-record-balanced{ font-size:.84rem; color:var(--moss); }
+
+/* ══ Mindfulness sessions ════════════════════════════ */
+.mindfulness-card{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:16px; margin-bottom:12px;
+}
+.mindfulness-session-title{ font-size:.96rem; font-weight:600; margin-bottom:2px; }
+.mindfulness-session-desc{ font-size:.78rem; margin-bottom:10px; }
+.mindfulness-progress{
+  width:100%; height:5px; background:var(--bg-card-2); border-radius:999px;
+  overflow:hidden; margin-bottom:10px;
+}
+.mindfulness-progress-fill{
+  height:100%; background:linear-gradient(90deg,var(--dusk),var(--bloom));
+  border-radius:999px; transition:width .5s ease;
+}
+.mindfulness-step-label{ font-size:.72rem; color:var(--text-faint); margin-bottom:6px; }
+.mindfulness-instruction{
+  font-size:.9rem; line-height:1.7; color:var(--text-muted); margin-bottom:12px; font-style:italic;
+}
+.mindfulness-timer{
+  font-family:var(--font-mono); font-size:1.4rem; font-weight:700; color:var(--dusk);
+  text-align:center; margin-bottom:10px;
+}
+
+/* ══ Mood boosters ════════════════════════════════════ */
+.booster-card{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:22px; margin-bottom:12px; text-align:center;
+}
+.booster-body{ margin-bottom:18px; }
+.booster-text{ font-size:1.05rem; line-height:1.6; margin-bottom:8px; }
+.booster-time{ font-size:.78rem; color:var(--text-muted); }
+.booster-actions{ display:flex; gap:10px; }
+.booster-done-card{ text-align:center; padding:24px; }
+.booster-done-emoji{ font-size:2.5rem; margin-bottom:8px; }
+.booster-done-text{ font-size:1rem; font-weight:600; }
+
+/* ══ Quotes & Affirmations ═══════════════════════════ */
+.quote-label{
+  font-size:.65rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--bloom); margin-bottom:6px;
+}
+.quote-text{
+  font-family:var(--font-serif); font-size:.96rem; line-height:1.65;
+  color:var(--text); font-style:italic; margin-bottom:4px;
+}
+.quote-author{ font-size:.76rem; color:var(--text-faint); }
+.affirmation-text{
+  font-family:var(--font-serif); font-size:1rem; line-height:1.6;
+  color:var(--text); font-weight:500;
+}
+
+/* ══ Grounding steps (numbered) ══════════════════════ */
+.grounding-steps{ margin:12px 0 0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:8px; }
+.grounding-steps li{ font-size:.88rem; line-height:1.5; }
+
+/* ══════════════════════════════════════════════════
+   MOBILE FIXES — comprehensive responsive overhaul
+   Target: 320px – 480px (all modern phones)
+══════════════════════════════════════════════════ */
+
+/* Scrollable tabs — hide scrollbar everywhere */
+.range-tabs::-webkit-scrollbar{ display:none; }
+
+/* Fix safe area for main content on iPhone X+ */
+@supports (padding-bottom: env(safe-area-inset-bottom)){
+  .bottombar{
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+  main#screens{
+    padding-bottom:calc(112px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── ALL PHONES (≤ 480px) ──────────────────────── */
+@media (max-width:480px){
+
+  /* Typography scale */
+  h1{ font-size:1.5rem; }
+  h2{ font-size:1.18rem; margin-bottom:12px; }
+  h3{ font-size:.96rem; }
+
+  /* Card padding */
+  .card{ padding:14px; border-radius:var(--r-lg); }
+
+  /* Emoji picker — 4 columns on narrow phones */
+  .emoji-picker{ grid-template-columns:repeat(4,1fr); gap:6px; }
+  .emoji-face{ font-size:1.55rem; }
+  .emoji-label{ font-size:.58rem; }
+  .emoji-btn{ padding:8px 4px 7px; border-radius:var(--r-sm); }
+
+  /* Bottom nav — ensure all 5 tabs fit */
+  .nav-btn{ padding:6px 3px; font-size:.58rem; letter-spacing:-.01em; }
+  .nav-icon svg{ width:18px; height:18px; }
+
+  /* Range tabs on tools — ensure scroll works */
+  #toolsTabs .range-tab{ padding:8px 10px; font-size:.78rem; }
+
+  /* Check-in sections */
+  .checkin-step-label{ font-size:.92rem; }
+  .mood-slider-labels{ font-size:.7rem; }
+
+  /* Chips — slightly smaller on tiny screens */
+  .chip{ padding:7px 12px; font-size:.78rem; }
+
+  /* Tracker columns stack on very small screens */
+  .tracker-cols{ grid-template-columns:1fr; }
+
+  /* More grid — 2 columns on very small phones, 3 on regular */
+  .more-grid{ grid-template-columns:repeat(3,1fr); gap:8px; }
+  .more-card{ padding:14px 4px; }
+  .more-icon{ font-size:1.4rem; }
+  .more-label{ font-size:.65rem; }
+
+  /* Topbar */
+  .topbar{ padding:12px 14px 6px; }
+  .brand-name{ font-size:.96rem; }
+
+  /* Mood orb — slightly smaller */
+  .mood-orb{ width:100px; height:100px; }
+
+  /* Stats grid — 2×2 */
+  .stats-grid{ grid-template-columns:1fr 1fr; }
+
+  /* Wellness grid */
+  .wellness-grid{ grid-template-columns:1fr 1fr 1fr; gap:6px; }
+
+  /* Assessment options — proper touch targets */
+  .assess-option-btn{
+    min-height:48px; display:flex; align-items:center;
+    padding:12px 14px; font-size:.85rem;
+  }
+  .assess-score-ring{ width:90px; height:90px; border-width:4px; }
+  .assess-score-num{ font-size:1.5rem; }
+  .assess-nav-row{ gap:8px; }
+  .assess-nav-row .btn-ghost, .assess-nav-row .btn-primary{ padding:12px 16px; font-size:.86rem; }
+
+  /* Resource cards — call buttons full width on mobile */
+  .resource-actions{ flex-direction:column; gap:6px; }
+  .resource-btn{ text-align:center; }
+
+  /* CBT — full-width layout */
+  .cbt-form textarea{ min-height:60px; }
+
+  /* Breathing orb */
+  .breath-orb{ width:72px; height:72px; }
+
+  /* Mindfulness instruction text */
+  .mindfulness-instruction{ font-size:.86rem; }
+
+  /* Profile gate card */
+  .profile-card{ padding:24px 18px; }
+
+  /* Settings form actions */
+  .form-actions{ flex-direction:column; }
+  .form-actions > *{ width:100% !important; }
+
+  /* Habit card */
+  .habit-stats{ font-size:.7rem; gap:8px; }
+
+  /* Journal entry */
+  .journal-entry-header{ flex-direction:column; gap:2px; align-items:flex-start; }
+
+  /* Goal progress */
+  .goal-pct{ display:none; }/* saves space on mobile */
+
+  /* Screen padding */
+  main#screens{ padding-left:12px; padding-right:12px; }
+}
+
+/* ── VERY SMALL PHONES (≤ 360px) ─────────────────── */
+@media (max-width:360px){
+  .emoji-picker{ grid-template-columns:repeat(4,1fr); gap:4px; }
+  .emoji-face{ font-size:1.4rem; }
+  .nav-btn{ font-size:.56rem; padding:5px 2px; }
+  .more-grid{ grid-template-columns:repeat(3,1fr); gap:6px; }
+  .more-card{ padding:12px 4px; }
+  .more-icon{ font-size:1.2rem; }
+  h1{ font-size:1.35rem; }
+  h2{ font-size:1.08rem; }
+  main#screens{ padding-left:10px; padding-right:10px; }
+}
+
+/* ── PORTRAIT TABLETS (481px – 768px) ─────────────── */
+@media (min-width:481px) and (max-width:768px){
+  .emoji-picker{ grid-template-columns:repeat(6,1fr); gap:8px; }
+  .more-grid{ grid-template-columns:repeat(4,1fr); }
+  .tracker-cols{ grid-template-columns:1fr 1fr; }
+  main#screens{ padding:4px 24px 110px; }
+}
+
+/* ── TOUCH: prevent double-tap zoom on buttons ───── */
+button, a{
+  touch-action:manipulation;
+}
+
+/* ── SCROLL PERFORMANCE ───────────────────────────── */
+.chat-messages,
+.journal-entries-list,
+#resourcesContent,
+#assessmentsList,
+#habitsList{
+  -webkit-overflow-scrolling:touch;
+  overflow-y:auto;
+}
+
+/* ── FOCUS VISIBLE: better on touch ───────────────── */
+@media (hover:none){
+  :focus-visible{ outline-width:3px; }
+  .btn-primary:hover{ filter:none; }
+  .card:hover{ box-shadow:var(--shadow-sm); }
+  .chip:hover{ border-color:var(--border-2); color:var(--text-muted); }
+}
+
+/* ── TEXT SELECTION: reasonable on mobile ─────────── */
+p, .mindfulness-instruction, .assess-question, .booster-text, .quote-text, .affirmation-text{
+  -webkit-user-select:text; user-select:text;
+}
+
+/* ── FIX: screen-log modal padding on iPhone ─────── */
+.screen.active{ min-height:10px; }
+
+/* ── FIX: iOS momentum scroll for main ───────────── */
+main#screens{ -webkit-overflow-scrolling:touch; }

@@ -20,7 +20,22 @@ const Breathing = (function(){
         { key:'breathing_rest',   secs:4 }
       ]
     },
-    fse: { // 4-7-8
+    triangle: {
+      key: 'triangle',
+      phases: [
+        { key:'breathing_inhale', secs:4 },
+        { key:'breathing_hold',   secs:4 },
+        { key:'breathing_exhale', secs:4 }
+      ]
+    },
+    resonance: {
+      key: 'resonance',
+      phases: [
+        { key:'breathing_inhale', secs:5 },
+        { key:'breathing_exhale', secs:5 }
+      ]
+    },
+    fse: {
       key: 'fse',
       phases: [
         { key:'breathing_inhale', secs:4 },
@@ -107,9 +122,13 @@ const Breathing = (function(){
     if(!wrap) return;
 
     wrap.innerHTML = [
-      renderExercise('box', I18n.t('box_breathing_name'), I18n.t('box_breathing_desc')),
-      renderExercise('fse', I18n.t('breathing_478_name'), I18n.t('breathing_478_desc')),
-      renderGrounding()
+      renderExercise('box',      I18n.t('box_breathing_name'),  I18n.t('box_breathing_desc')),
+      renderExercise('fse',      I18n.t('breathing_478_name'),  I18n.t('breathing_478_desc')),
+      renderExercise('triangle', 'Triangle breathing',           '4 seconds each: inhale, hold, exhale. A simple, effective technique for focus and calm.'),
+      renderExercise('resonance','Resonance breathing',          '5 seconds in, 5 seconds out. This rhythm synchronises heart rate and nervous system, reducing blood pressure and anxiety within minutes.'),
+      renderGrounding(),
+      renderPMR(),
+      renderSafePlace()
     ].join('');
 
     // Wire buttons
@@ -158,9 +177,56 @@ const Breathing = (function(){
     `;
   }
 
+  function renderPMR(){
+    const steps = [
+      'Start by finding a comfortable position — lying down or sitting.',
+      'Take two slow breaths to settle in.',
+      'Tense your feet — curl your toes tightly. Hold for 5 seconds... then release completely.',
+      'Now your calves. Tense, hold 5 seconds... release.',
+      'Your thighs. Squeeze them together, hold... release.',
+      'Tighten your stomach muscles. Hold... release. Notice the warmth.',
+      'Make fists with both hands. Hold... release. Feel the difference.',
+      'Shrug your shoulders up to your ears. Hold... release. Let them drop.',
+      'Scrunch your face — eyes shut, jaw tight. Hold... release.',
+      'Now your whole body at once — tense everything. Hold 5 seconds... and release.',
+      'Rest. Breathe naturally. Notice the deep relaxation spreading through your body.',
+    ];
+    return `
+      <div class="breath-card">
+        <h3 class="breath-name">${I18n.t('pmr_title')||'Progressive Muscle Relaxation'}</h3>
+        <p class="breath-desc muted">${I18n.t('pmr_desc')||'Tense and release muscle groups progressively to release stored tension.'}</p>
+        <ol class="grounding-steps">
+          ${steps.map(s=>`<li>${escHtml(s)}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
+  function renderSafePlace(){
+    const steps = [
+      'Close your eyes and take three slow, deep breaths.',
+      'Imagine a place — real or imagined — where you feel completely safe and calm. It could be a beach, a forest, a childhood room, or anywhere peaceful.',
+      'Notice what you can see in this place. The colours, the light, the shapes.',
+      'What sounds are there? Perhaps wind, water, birds, or gentle silence.',
+      'What can you feel? The temperature of the air, a surface beneath you, a gentle breeze.',
+      'What smells are present? Take them in slowly.',
+      'Rest here for as long as you like. This place is always available to you.',
+      'When you\'re ready, take three deep breaths and gently return to the room.',
+    ];
+    return `
+      <div class="breath-card">
+        <h3 class="breath-name">${I18n.t('safe_place_title')||'Safe Place Visualisation'}</h3>
+        <p class="breath-desc muted">${I18n.t('safe_place_desc')||'Visualise a place where you feel completely safe and calm.'}</p>
+        <ol class="grounding-steps">
+          ${steps.map(s=>`<li>${escHtml(s)}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
   function escHtml(str){
     const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
   }
 
-  return { renderAll, start, stop };
+  return { renderAll, start, stop, renderGroundingCards: () => renderGrounding() + renderPMR() + renderSafePlace() };
 })();
