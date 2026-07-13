@@ -1406,3 +1406,91 @@ p, .mindfulness-instruction, .assess-question, .booster-text, .quote-text, .affi
 
 /* ── FIX: iOS momentum scroll for main ───────────── */
 main#screens{ -webkit-overflow-scrolling:touch; }
+
+/* ══════════════════════════════════════════════════
+   ANGER MANAGEMENT
+══════════════════════════════════════════════════ */
+
+/* STOP card */
+.anger-stop-card{ border-left:3px solid var(--bloom); }
+.anger-stop-steps{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+.anger-stop-step{
+  display:flex; align-items:flex-start; gap:14px;
+  background:var(--bg-card-2); border-radius:var(--r-md); padding:12px 14px;
+}
+.anger-stop-letter{
+  flex-shrink:0; width:32px; height:32px; border-radius:50%;
+  background:var(--bloom-faint); color:var(--bloom);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:1rem; font-weight:700;
+}
+.anger-stop-text{ font-size:.88rem; line-height:1.55; padding-top:4px; }
+
+/* Intensity display */
+.anger-intensity-section{ border-left:3px solid var(--dusk); }
+.anger-slider-row{ margin:10px 0 6px; }
+.anger-intensity-display{
+  display:flex; align-items:baseline; gap:12px; margin-top:4px;
+}
+.anger-intensity-num{
+  font-family:var(--font-mono); font-size:2rem; font-weight:700; line-height:1;
+  transition:color .25s ease;
+}
+.anger-intensity-label{ font-size:.88rem; color:var(--text-muted); transition:color .25s ease; }
+
+/* Anger list (numbered steps) */
+.anger-list{
+  padding-left:20px; display:flex; flex-direction:column; gap:8px; margin-top:8px;
+}
+.anger-list li{ font-size:.88rem; line-height:1.6; color:var(--text-muted); }
+
+/* Anger express list */
+.anger-express-list{
+  padding-left:18px; margin-top:8px; display:flex; flex-direction:column; gap:6px;
+}
+.anger-express-list li{ font-size:.86rem; line-height:1.55; color:var(--text-muted); }
+
+/* ══════════════════════════════════════════════════
+   COMMUNICATION UNDER STRESS
+══════════════════════════════════════════════════ */
+
+/* I-statement output */
+.comm-template-label{
+  font-family:var(--font-mono); font-size:.8rem; color:var(--dusk);
+  background:var(--dusk-faint); border-radius:var(--r-sm); padding:8px 12px;
+  margin-bottom:6px; line-height:1.5;
+}
+.comm-is-output{
+  font-family:var(--font-serif); font-size:.96rem; line-height:1.7;
+  background:var(--moss-faint); border:1px solid rgba(110,140,123,0.3);
+  border-radius:var(--r-md); padding:12px 14px; color:var(--text);
+  font-style:italic; margin-top:8px;
+}
+.comm-example{ margin-bottom:10px; }
+
+/* Script cards */
+.comm-script-card{
+  margin-bottom:10px; border-left:3px solid var(--dusk);
+  position:relative;
+}
+.comm-script-title{ font-size:.84rem; font-weight:700; color:var(--dusk); margin-bottom:6px; }
+.comm-script-text{
+  font-size:.88rem; line-height:1.65; color:var(--text-muted); font-style:italic;
+  margin-bottom:10px;
+}
+.comm-copy-btn{
+  font-size:.76rem; font-weight:600; padding:6px 12px; border-radius:999px;
+  background:var(--bg-card-2); border:1px solid var(--border-2);
+  color:var(--text-muted); transition:all .15s ease;
+}
+.comm-copy-btn:hover{ background:var(--dusk-faint); color:var(--dusk); border-color:var(--dusk); }
+
+/* ══════════════════════════════════════════════════
+   MOBILE OVERRIDES — anger & communication
+══════════════════════════════════════════════════ */
+@media (max-width:480px){
+  .anger-stop-step{ gap:10px; padding:10px 12px; }
+  .anger-stop-letter{ width:28px; height:28px; font-size:.88rem; }
+  .anger-intensity-num{ font-size:1.6rem; }
+  .comm-script-text{ font-size:.84rem; }
+}

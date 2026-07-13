@@ -194,38 +194,32 @@
 
   function renderToolsScreen(){
     const TABS = {
-      breathing:   'breathingTools',
-      mindfulness: 'mindfulnessContent',
-      cbt:         'cbtContent',
-      grounding:   'groundingContent',
-      boosters:    'moodBoostersContent',
+      breathing:     'breathingTools',
+      mindfulness:   'mindfulnessContent',
+      cbt:           'cbtContent',
+      anger:         'angerContent',
+      communication: 'communicationContent',
+      grounding:     'groundingContent',
+      boosters:      'moodBoostersContent',
     };
 
-    // Show only the active panel
     Object.values(TABS).forEach(id => {
       const el = document.getElementById(id);
       if(el) el.classList.toggle('hidden', TABS[toolsTab] !== id);
     });
 
-    // Render the active panel
     switch(toolsTab){
-      case 'breathing':
-        Breathing.renderAll();
-        break;
-      case 'mindfulness':
-        Mindfulness.render();
-        break;
-      case 'cbt':
-        CBT.render();
-        break;
+      case 'breathing':     Breathing.renderAll(); break;
+      case 'mindfulness':   Mindfulness.render(); break;
+      case 'cbt':           CBT.render(); break;
+      case 'anger':         Anger.render(); break;
+      case 'communication': Communication.render(); break;
       case 'grounding': {
         const g = document.getElementById('groundingContent');
         if(g) g.innerHTML = Breathing.renderGroundingCards();
         break;
       }
-      case 'boosters':
-        MoodBoosters.render();
-        break;
+      case 'boosters': MoodBoosters.render(); break;
     }
   }
 

@@ -53,8 +53,8 @@
 //      add the `from` field set to that alias.
 // ────────────────────────────────────────────────────
 
-var ADMIN_EMAIL  = 'kargold100@yahoo.com';          // ← change this
-var APP_URL      = 'https://kargold100.github.io/mindora/'; // ← change this
+var ADMIN_EMAIL  = 'your-admin@email.com';          // ← change this
+var APP_URL      = 'https://yourdomain.github.io/mindora/'; // ← change this
 var SENDER_NAME  = 'Mindora';                        // display name in inbox
 
 // ── Sheet names ────────────────────────────────────────
